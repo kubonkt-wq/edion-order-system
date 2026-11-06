@@ -45,7 +45,6 @@
             border-radius: 2px;
         }
 
-        /* 帳票印刷用スタイル (A4 1枚完結) */
         @media print {
             body * {
                 visibility: hidden;
@@ -59,10 +58,9 @@
                 top: 0;
                 width: 100%;
                 margin: 0;
-                padding: 6mm 10mm;
+                padding: 4mm 6mm;
                 background: white;
                 color: black;
-                font-family: "MS Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
             }
             .no-print {
                 display: none !important;
@@ -73,46 +71,47 @@
             }
         }
 
-        .sheet-container {
-            border: 2px solid #000;
-            padding: 10px 14px;
-            background: white;
+        .excel-sheet-outer {
+            background: #fff;
             max-width: 820px;
             margin: 0 auto;
+            padding: 10px 14px;
+            border: 1px solid #999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            font-family: "MS PGothic", "ＭＳ Ｐゴシック", "Hiragino Kaku Gothic ProN", sans-serif;
             color: #000;
             font-size: 11px;
-            line-height: 1.3;
+            line-height: 1.25;
         }
-        .sheet-table {
+        .excel-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 6px;
+            border: 2px solid #000;
+            margin-bottom: -1px;
         }
-        .sheet-table td, .sheet-table th {
+        .excel-table td, .excel-table th {
             border: 1px solid #000;
-            padding: 4px 6px;
+            padding: 3px 5px;
+            vertical-align: middle;
         }
-        .sheet-table th {
-            background-color: #f0f0f0;
+        .excel-lbl {
+            background-color: #e6e6e6;
             text-align: center;
-            font-weight: bold;
+            font-weight: normal;
         }
-        .notice-text {
+        .excel-notice {
             font-size: 9px;
             line-height: 1.25;
-            color: #333;
-            border: 1px solid #777;
-            padding: 4px 6px;
-            margin-bottom: 6px;
+            padding: 3px 4px;
+            margin-bottom: 4px;
         }
-        .hanko-cell {
-            width: 52px;
-            height: 52px;
+        .hanko-box {
+            width: 58px;
+            height: 58px;
             border: 1px solid #000;
             text-align: center;
-            vertical-align: top;
+            vertical-align: middle;
             font-size: 10px;
-            padding-top: 2px;
         }
     </style>
 </head>
@@ -151,7 +150,7 @@
         </form>
 
         <div class="bg-light p-3 rounded border mt-2">
-            <div class="small fw-bold text-secondary mb-2"><i class="bi bi-lightning-charge me-1"></i>クイック切替テスト:</div>
+            <div class="small fw-bold text-secondary mb-2"><i class="bi bi-lightning-charge me-1"></i>テスト用クイック切替:</div>
             <div class="d-grid gap-2">
                 <button type="button" class="btn btn-outline-dark btn-sm text-start" onclick="quickLogin('admin', 'admin123')">
                     <strong>① 中日新聞社 本部管理者</strong><br>
@@ -159,7 +158,7 @@
                 </button>
                 <button type="button" class="btn btn-outline-primary btn-sm text-start" onclick="quickLogin('1001', 'shop123')">
                     <strong>② 専売店: 中日新聞 名古屋栄専売店</strong><br>
-                    <small class="text-muted">（見積書・発注書作成、自店履歴のみ）</small>
+                    <small class="text-muted">（発注書・見積書作成、自店履歴のみ）</small>
                 </button>
             </div>
         </div>
@@ -210,25 +209,23 @@
 
         <div class="tab-content" id="portalTabContent">
             
-            <!-- 1. 新規入力タブ（公式Excel完全準拠フォーム） -->
             <div class="tab-pane fade show active" id="order-pane" role="tabpanel">
                 <div class="card card-custom p-4">
                     <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
                         <h5 class="fw-bold text-primary mb-0">
                             <i class="bi bi-pencil-square me-2"></i>家電発注・見積登録フォーム
                         </h5>
-                        <div class="text-muted small">
-                            ※登録後、「EDION発注書」または「顧客向け見積書」のどちらでも即座に印刷出力できます。
+                        <div class="badge bg-light text-secondary border">
+                            ※発注先：EDION ESC受発注センター（発注元：中日新聞社 名義）
                         </div>
                     </div>
                     
                     <form id="orderForm">
                         
-                        <!-- ① 発注店舗・担当者情報 -->
-                        <div class="section-header">① 発注店舗・担当者情報</div>
+                        <div class="section-header">① 取扱専売店（中日新聞店）</div>
                         <div class="bg-light p-3 rounded mb-3 border">
                             <div id="adminShopSelector">
-                                <div class="row g-2 mb-2">
+                                <div class="row g-2">
                                     <div class="col-md-3">
                                         <label class="form-label small fw-bold">県</label>
                                         <select class="form-select form-select-sm" id="filterPref" onchange="onPrefChange()">
@@ -248,52 +245,37 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label small fw-bold">発注店舗（確定）</label>
-                                        <select class="form-select form-select-sm border-primary" id="selectShop" onchange="onAdminShopSelected()">
+                                        <label class="form-label small fw-bold">取扱専売店（確定）</label>
+                                        <select class="form-select form-select-sm border-primary" id="selectShop">
                                             <option value="">専売店を選択してください</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
 
-                            <div id="storeShopFixed" style="display: none;" class="mb-2">
+                            <div id="storeShopFixed" style="display: none;">
                                 <div class="alert alert-info py-2 mb-0 d-flex align-items-center">
                                     <i class="bi bi-shop fs-5 me-2 text-primary"></i>
                                     <div>
-                                        発注店舗: <strong id="fixedShopName" class="fs-6">--</strong>
+                                        取扱店舗: <strong id="fixedShopName" class="fs-6">--</strong>
                                         <span class="badge bg-secondary ms-2" id="fixedShopCode">--</span>
                                         <span class="small text-muted ms-2" id="fixedShopTel"></span>
+                                        <span class="ms-3 small text-success fw-bold">※発注書には中日新聞社の情報が自動印字されます</span>
                                     </div>
-                                </div>
-                            </div>
-
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold">店舗FAX番号</label>
-                                    <input type="tel" class="form-control form-control-sm" id="shopFax" placeholder="例: 052-XXX-XXXX">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold">ご担当者名</label>
-                                    <input type="text" class="form-control form-control-sm" id="shopStaff" placeholder="例: 中日 太郎" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold">担当者 連絡先（携帯）</label>
-                                    <input type="tel" class="form-control form-control-sm" id="shopStaffTel" placeholder="例: 090-XXXX-XXXX" required>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- ② エンドユーザー様情報 -->
                         <div class="section-header">② 【エンドユーザー様情報】（新聞読者）</div>
                         <div class="bg-light p-3 rounded mb-3 border">
                             <div class="row g-3">
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold">フリガナ</label>
-                                    <input type="text" class="form-control form-control-sm" id="custKana" placeholder="例: チュウニチ ハナコ">
+                                    <input type="text" class="form-control form-control-sm" id="custKana" placeholder="例: チュウニチ タロウ">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold">お名前（フルネーム）</label>
-                                    <input type="text" class="form-control form-control-sm" id="custName" placeholder="例: 中日 花子 様" required>
+                                    <input type="text" class="form-control form-control-sm" id="custName" placeholder="例: 中日 太郎 様" required>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold">連絡先（自宅電話）</label>
@@ -308,33 +290,32 @@
                                     <input type="text" class="form-control form-control-sm" id="custZip" placeholder="例: 460-0001">
                                 </div>
                                 <div class="col-md-10">
-                                    <label class="form-label small fw-bold">ご住所（※マンション等の場合は建物名・部屋番号まで必ず記入）</label>
+                                    <label class="form-label small fw-bold">ご住所（建物名・階数・部屋番号まで必ずご記入ください）</label>
                                     <input type="text" class="form-control form-control-sm" id="custAddress" placeholder="例: 愛知県名古屋市中区三の丸1-1-1 ○○マンション401号室" required>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- ③ 手配内容・配達先状況・希望日時 -->
                         <div class="section-header">③ 手配内容・配達先状況・配達及び工事希望日時</div>
                         <div class="bg-light p-3 rounded mb-3 border">
                             <div class="row g-3 mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold">ご希望の手配内容（いずれか選択）</label>
                                     <select class="form-select form-select-sm" id="deliveryType" required>
-                                        <option value="②ｴﾃﾞｨｵﾝ配達ｾﾝﾀｰを利用してお客様宅へ配達（設置有）">② エディオン配達センターを利用してお客様宅へ配達（※配達設置料金要）</option>
-                                        <option value="①加盟店様に納品">① 加盟店様（専売店）に納品（※日時指定不可）</option>
-                                        <option value="③ｴﾃﾞｨｵﾝ店舗での商品受取">③ エディオン店舗での商品受取</option>
+                                        <option value="2">② ｴﾃﾞｨｵﾝの配達ｾﾝﾀｰを利用してお客様宅へ配達（※配達設置料金要）</option>
+                                        <option value="1">① 加盟店様に納品（※日時指定不可）</option>
+                                        <option value="3">③ ｴﾃﾞｨｵﾝ店舗での商品受取</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold">配達先状況（階段手上げの有無）</label>
                                     <select class="form-select form-select-sm" id="stairFloor">
-                                        <option value="エレベーターあり / 戸建て1階">エレベーターあり / 戸建て1階（追加なし）</option>
-                                        <option value="2階に階段搬入 (+1,100円)">2階に階段搬入 (+1,100円追加)</option>
-                                        <option value="3階に階段搬入 (+1,100円)">3階に階段搬入 (+1,100円追加)</option>
-                                        <option value="4階に階段搬入 (+2,200円)">4階に階段搬入 (+2,200円追加)</option>
-                                        <option value="5階に階段搬入 (+2,200円)">5階に階段搬入 (+2,200円追加)</option>
-                                        <option value="内階段・ユニック搬入事前見積必要">内階段（※450L以上冷蔵庫・ドラム式洗濯機等はユニック見積要）</option>
+                                        <option value="">エレベーターあり / 戸建て1階（階段なし）</option>
+                                        <option value="2">2階に階段搬入 (+1,100円)</option>
+                                        <option value="3">3階に階段搬入 (+1,100円)</option>
+                                        <option value="4">4階に階段搬入 (+2,200円)</option>
+                                        <option value="5">5階に階段搬入 (+2,200円)</option>
+                                        <option value="内階段">内階段（大型冷蔵庫・ドラム式等はユニック見積要）</option>
                                     </select>
                                 </div>
                             </div>
@@ -342,7 +323,7 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="p-2 border rounded bg-white">
-                                        <div class="small fw-bold text-primary mb-1">【配達及び工事 第一希望】</div>
+                                        <div class="small fw-bold text-primary mb-1">【第一希望】</div>
                                         <div class="row g-2">
                                             <div class="col-7">
                                                 <input type="date" class="form-control form-control-sm" id="deliveryDate1">
@@ -360,7 +341,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="p-2 border rounded bg-white">
-                                        <div class="small fw-bold text-secondary mb-1">【配達及び工事 第二希望】</div>
+                                        <div class="small fw-bold text-secondary mb-1">【第二希望】</div>
                                         <div class="row g-2">
                                             <div class="col-7">
                                                 <input type="date" class="form-control form-control-sm" id="deliveryDate2">
@@ -379,13 +360,12 @@
                             </div>
                         </div>
 
-                        <!-- ④ 発注商品・価格・見積設定 -->
-                        <div class="section-header">④ 発注商品明細・価格設定・見積</div>
+                        <div class="section-header">④ 発注商品明細・価格・見積設定</div>
                         <div class="bg-light p-3 rounded mb-3 border">
                             <div class="row g-3 mb-2">
                                 <div class="col-md-3">
-                                    <label class="form-label small fw-bold">メーカー名</label>
-                                    <input type="text" class="form-control form-control-sm" id="makerName" placeholder="例: SHARP / パナソニック" required>
+                                    <label class="form-label small fw-bold">メ－カ－名</label>
+                                    <input type="text" class="form-control form-control-sm" id="makerName" placeholder="例: SHARP" required>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small fw-bold">商品名</label>
@@ -397,7 +377,7 @@
                                 </div>
                                 <div class="col-md-1">
                                     <label class="form-label small fw-bold">色</label>
-                                    <input type="text" class="form-control form-control-sm" id="prodColor" placeholder="例: -K(黒)">
+                                    <input type="text" class="form-control form-control-sm" id="prodColor" placeholder="-K">
                                 </div>
                                 <div class="col-md-1">
                                     <label class="form-label small fw-bold">数量</label>
@@ -407,34 +387,31 @@
 
                             <div class="row g-3 mb-2">
                                 <div class="col-md-3">
-                                    <label class="form-label small fw-bold">ESC提供価格(税込み・1台)</label>
+                                    <label class="form-label small fw-bold">提供価格（税込み）</label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text">¥</span>
-                                        <input type="number" class="form-control" id="wholesalePrice" placeholder="卸価格(税込)" required oninput="calcPrices()">
+                                        <input type="number" class="form-control" id="wholesalePrice" placeholder="ESC卸値" required oninput="calcPrices()">
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label small fw-bold">配送料金(税込み)</label>
+                                    <label class="form-label small fw-bold">配送料金（税込み）</label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text">¥</span>
                                         <input type="number" class="form-control" id="shippingFee" value="0" oninput="calcPrices()">
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label small fw-bold">リサイクル回収</label>
+                                    <label class="form-label small fw-bold">リサイクル</label>
                                     <select class="form-select form-select-sm" id="recycleSelect">
-                                        <option value="無">無（回収なし）</option>
-                                        <option value="有（テレビ引き取り）">有：テレビ（現地現金精算）</option>
-                                        <option value="有（冷蔵庫引き取り）">有：冷蔵庫（現地現金精算）</option>
-                                        <option value="有（洗濯機引き取り）">有：洗濯機（現地現金精算）</option>
-                                        <option value="有（エアコン引き取り）">有：エアコン（現地現金精算）</option>
+                                        <option value="無">無</option>
+                                        <option value="有">有（現地現金精算）</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label small fw-bold">顧客への提示売価(税込み・見積用)</label>
+                                    <label class="form-label small fw-bold">顧客への提示売価(税込・見積用)</label>
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text">¥</span>
-                                        <input type="number" class="form-control" id="sellingPrice" placeholder="販売価格(税込)" required oninput="calcPrices()">
+                                        <input type="number" class="form-control" id="sellingPrice" placeholder="販売価格" required oninput="calcPrices()">
                                     </div>
                                 </div>
                             </div>
@@ -442,40 +419,39 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="p-2 bg-white rounded border d-flex justify-content-between align-items-center">
-                                        <span class="small fw-bold text-muted">EDION決済合計（卸値×数量＋配送料）:</span>
+                                        <span class="small fw-bold text-muted">EDIONカード決済合計（提供価格×数量＋配送料）:</span>
                                         <strong class="fs-6 text-primary" id="totalEdionPayment">¥0</strong>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="p-2 bg-white rounded border d-flex justify-content-between align-items-center">
-                                        <span class="small fw-bold text-muted">専売店 粗利見込（(売価 - 卸値)×数量）:</span>
+                                        <span class="small fw-bold text-muted">専売店 粗利見込:</span>
                                         <strong class="fs-6 text-success" id="profitDisplay">¥0 (0.0%)</strong>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- ⑤ カード決済欄 ＆ 連絡事項 -->
-                        <div class="section-header">⑤ カード利用決済欄 ＆ 連絡事項（加盟店様記入欄）</div>
+                        <div class="section-header">⑤ カード利用決済欄 ＆ 連絡事項</div>
                         <div class="bg-light p-3 rounded mb-3 border">
                             <div class="row g-3 mb-2">
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold">決済区分</label>
-                                    <input type="text" class="form-control form-control-sm bg-white" value="EDION B to B Card (翌月27日)" readonly>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">カードＮＯ（16桁）</label>
+                                    <input type="text" class="form-control form-control-sm" id="cardNo" placeholder="例: 1234-5678-9012-3456" maxlength="24">
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold">カードNO（または下4桁）</label>
-                                    <input type="text" class="form-control form-control-sm" id="cardNo" placeholder="例: 1234-5678-9012-3456">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">有効期限（年）</label>
+                                    <input type="text" class="form-control form-control-sm" id="cardExpYear" placeholder="例: 2028">
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold">カード有効期限</label>
-                                    <input type="text" class="form-control form-control-sm" id="cardExp" placeholder="例: 2028年 12月">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">有効期限（月）</label>
+                                    <input type="text" class="form-control form-control-sm" id="cardExpMonth" placeholder="例: 12">
                                 </div>
                             </div>
                             <div class="row g-3">
                                 <div class="col-12">
-                                    <label class="form-label small fw-bold">連絡事項（加盟店様記入欄）</label>
-                                    <textarea class="form-control form-control-sm" id="orderMemo" rows="2" placeholder="例: 配達前の事前連絡希望、不在時は専売店へ連絡など"></textarea>
+                                    <label class="form-label small fw-bold">連絡事項（加盟店様記入欄に追記する特記事項）</label>
+                                    <textarea class="form-control form-control-sm" id="orderMemo" rows="2" placeholder="例: 配達前に電話連絡希望、不在時は○○へなど"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -489,13 +465,12 @@
                 </div>
             </div>
 
-            <!-- 2. 受注一覧 -->
             <div class="tab-pane fade" id="list-pane" role="tabpanel">
                 <div class="card card-custom p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold text-primary mb-0"><i class="bi bi-list-check me-2"></i><span id="listTableTitle">登録済 受注・見積一覧</span></h5>
                         <button class="btn btn-outline-success btn-sm" onclick="exportOrdersCSV()">
-                            <i class="bi bi-file-earmark-excel me-1"></i>CSVダウンロード
+                            <i class="bi bi-file-earmark-excel me-1"></i>CSV一括ダウンロード
                         </button>
                     </div>
                     <div class="table-responsive">
@@ -503,14 +478,14 @@
                             <thead class="table-light small">
                                 <tr>
                                     <th>発注番号</th>
-                                    <th>発注専売店</th>
+                                    <th>取扱専売店</th>
                                     <th>顧客名</th>
                                     <th>メーカー / 商品名 / 型名</th>
-                                    <th>ESC卸価格(税込)</th>
-                                    <th>顧客売価(税込)</th>
+                                    <th>EDION決済額(税込)</th>
+                                    <th>顧客提示売価(税込)</th>
                                     <th>粗利</th>
                                     <th>ステータス</th>
-                                    <th class="text-center" style="min-width: 190px;">帳票印刷・出力</th>
+                                    <th class="text-center" style="min-width: 220px;">帳票出力・印刷</th>
                                 </tr>
                             </thead>
                             <tbody id="ordersTableBody"></tbody>
@@ -519,7 +494,6 @@
                 </div>
             </div>
 
-            <!-- 3. 専売店マスタ（管理者専用） -->
             <div class="tab-pane fade admin-only" id="shops-pane" role="tabpanel">
                 <div class="card card-custom p-4">
                     <h5 class="fw-bold text-primary mb-3"><i class="bi bi-shop me-2"></i>専売店マスタ管理（2店舗）</h5>
@@ -539,7 +513,6 @@
                                     <th>支部</th>
                                     <th>班</th>
                                     <th>電話番号</th>
-                                    <th>FAX番号</th>
                                 </tr>
                             </thead>
                             <tbody id="masterShopTableBody"></tbody>
@@ -548,7 +521,6 @@
                 </div>
             </div>
 
-            <!-- 4. 相殺集計（管理者専用） -->
             <div class="tab-pane fade admin-only" id="summary-pane" role="tabpanel">
                 <div class="card card-custom p-4">
                     <h5 class="fw-bold text-primary mb-3"><i class="bi bi-calculator me-2"></i>月次 新聞代相殺集計シミュレーション</h5>
@@ -561,7 +533,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="p-3 bg-light border rounded">
-                                <div class="small text-muted">EDION決済代金 合計（税込）</div>
+                                <div class="small text-muted">EDIONカード決済合計（中日新聞社請求分）</div>
                                 <h3 class="fw-bold text-primary mb-0" id="statTotalWholesale">¥0</h3>
                             </div>
                         </div>
@@ -582,181 +554,204 @@
 <!-- ================= 帳票プレビュー・印刷モーダルエリア ================= -->
 <div id="printArea" style="display: none;">
     
-    <!-- 切り替え操作ツールバー（印刷時は非表示） -->
     <div class="d-flex justify-content-between align-items-center mb-3 no-print p-2 bg-dark text-white rounded">
         <div>
-            <span class="fw-bold me-3"><i class="bi bi-printer me-1"></i>帳票出力モード選択:</span>
+            <span class="fw-bold me-2"><i class="bi bi-file-earmark-text me-1"></i>出力書類:</span>
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-sm btn-primary active" id="btnModeOrder" onclick="switchPrintDoc('order')">
-                    <i class="bi bi-file-earmark-text me-1"></i>①【EDION公式】発注書・カード利用書
+                    ①【EDION公式】発注書・カード利用書
                 </button>
-                <button type="button" class="btn btn-sm btn-success" id="btnModeQuote" onclick="switchPrintDoc('quote')">
-                    <i class="bi bi-receipt me-1"></i>②【顧客提出用】御見積書
+                <button type="button" class="btn btn-sm btn-outline-success" id="btnModeQuote" onclick="switchPrintDoc('quote')">
+                    ②【顧客提出用】御見積書
                 </button>
             </div>
         </div>
         <div>
-            <button class="btn btn-sm btn-secondary me-2" onclick="closePrint()">画面に戻る</button>
-            <button class="btn btn-sm btn-warning fw-bold px-4" onclick="window.print()">
-                <i class="bi bi-printer-fill me-1"></i>印刷・PDF保存を実行
+            <button class="btn btn-sm btn-success me-2" onclick="downloadCurrentExcel()">
+                <i class="bi bi-file-earmark-excel-fill me-1"></i>公式Excelダウンロード (.xls)
             </button>
+            <button class="btn btn-sm btn-warning fw-bold px-3 me-2" onclick="window.print()">
+                <i class="bi bi-printer-fill me-1"></i>A4印刷 / PDF保存
+            </button>
+            <button class="btn btn-sm btn-secondary" onclick="closePrint()">画面に戻る</button>
         </div>
     </div>
 
-    <!-- 帳票1: 【EDION公式】発注書・カード利用書 -->
-    <div id="docOrderSheet" class="sheet-container">
-        <div class="d-flex justify-content-between align-items-end border-bottom border-2 border-dark pb-1 mb-2">
-            <div>
-                <h4 class="fw-bold mb-0" style="letter-spacing: 2px;">発注書・カード利用書</h4>
-                <div class="small">（兼 配達工事依頼票 / EDION ESC受発注センター 行）</div>
-            </div>
-            <div class="text-end">
-                <div>発注日: <span id="faxPrintDate">2026年--月--日</span></div>
-                <div>発注No: <strong id="faxOrderNo">ED-000000</strong></div>
-            </div>
+    <!-- 1. 【EDION公式】発注書・カード利用書 -->
+    <div id="docOrderSheet" class="excel-sheet-outer">
+        <div class="d-flex justify-content-between align-items-end mb-1">
+            <div style="font-size: 18px; font-weight: bold; letter-spacing: 2px;">発注書・カード利用書</div>
+            <div style="font-size: 11px;" id="fxDateTop">2026年  月  日</div>
         </div>
 
-        <div class="notice-text">
-            ●本票にご記入いただきます個人情報は、訪問修理・持込修理・初期不良対応・メーカーからのリコール時におけるＤＭ以外に、これらのサービスを実施するための弊社システムへの登録のために使用いたします。<br>
+        <div class="excel-notice">
+            ●本票にご記入いただきます個人情報は、訪問修理・持込修理・初期不良対応・メーカーからのリコール時におけるＤＭ以外に、これらのサービスを実施するための弊社システムへの登録のために使用いたします。また、弊社と機密保持を締結している関連会社等にこれらの各種サービスに関して必要な限度内で開示・提示する場合があります。<br>
             ●見積の有効期限は見積日より１ヶ月となります。有効期限切れのお見積はご対応出来ません。
         </div>
 
-        <!-- エンドユーザー情報 -->
-        <table class="sheet-table">
+        <table class="excel-table">
             <tr>
-                <th colspan="4" style="text-align: left; background-color: #e6e6e6;">【エンドユーザー様情報】 <span style="font-weight: normal; font-size: 10px;">（ご発注の際は、必ずご記入をお願いします）</span></th>
+                <td colspan="5" style="background-color: #f2f2f2; font-weight: bold; font-size: 11px;">
+                    【エンドユーザー様情報】 <span style="font-weight: normal; font-size: 10px;">（ご発注の際は、必ずご記入をお願いします）</span>
+                    <span style="float: right; font-weight: normal; font-size: 9px; color: #555;">※見積の場合は記入不要です</span>
+                </td>
             </tr>
             <tr>
-                <td style="width: 15%; background: #f9f9f9;">フリガナ</td>
-                <td style="width: 45%;" id="faxCustKana">--</td>
-                <td style="width: 15%; background: #f9f9f9;">連絡先(自宅)</td>
-                <td style="width: 25%;" id="faxCustTel">--</td>
+                <td class="excel-lbl" style="width: 14%;">フリガナ</td>
+                <td style="width: 44%;" id="fxCustKana"></td>
+                <td class="excel-lbl" style="width: 12%;" rowspan="3">連絡先</td>
+                <td class="excel-lbl" style="width: 8%;">自宅</td>
+                <td style="width: 22%;" id="fxCustTel"></td>
             </tr>
             <tr>
-                <td style="background: #f9f9f9;">お名前</td>
-                <td style="font-size: 13px; font-weight: bold;"><span id="faxCustName">--</span> 様</td>
-                <td style="background: #f9f9f9;">連絡先(携帯)</td>
-                <td id="faxCustMobile">--</td>
+                <td class="excel-lbl" rowspan="2">お名前<br>（フルネーム）</td>
+                <td rowspan="2">
+                    <span id="fxCustName" style="font-size: 14px; font-weight: bold;"></span>
+                    <span style="float: right; font-size: 12px;">様</span>
+                </td>
+                <td class="excel-lbl">携帯</td>
+                <td id="fxCustMobile"></td>
             </tr>
             <tr>
-                <td style="background: #f9f9f9;">ご住所</td>
-                <td colspan="3">
-                    〒 <span id="faxCustZip">---</span> <br>
-                    <span id="faxCustAddress" style="font-size: 11px; font-weight: bold;">--</span>
+                <td colspan="2" style="background-color: #fafafa;"></td>
+            </tr>
+            <tr>
+                <td class="excel-lbl" rowspan="2">ご住所</td>
+                <td colspan="4">
+                    〒 <span id="fxCustZip3"></span> - <span id="fxCustZip4"></span>
+                    <span style="font-size: 9px; color: #555; margin-left: 15px;">※マンション等の場合は建物名までを必ずご記入下さい 【例】○○○マンション</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4" id="fxCustAddress" style="font-size: 12px; font-weight: bold; height: 28px;"></td>
+            </tr>
+        </table>
+
+        <table class="excel-table">
+            <tr>
+                <td class="excel-lbl" style="width: 14%;" rowspan="3">配達先<br>状況</td>
+                <td colspan="2" style="font-size: 9.5px;">エレベーター無しで（階段で）商品を搬入する場合ご記入ください</td>
+                <td class="excel-lbl" style="width: 18%;" rowspan="3">ご希望の<br>手配内容に☑を<br>ご記入下さい</td>
+                <td style="width: 38%; font-size: 10px;" id="fxDelivOpt1"> □① 加盟店様に納品</td>
+            </tr>
+            <tr>
+                <td style="width: 12%; text-align: center;">【 <strong id="fxFloorNum">&nbsp;&nbsp;&nbsp;&nbsp;</strong> 】</td>
+                <td style="font-size: 8.5px; line-height: 1.15;">
+                    階に搬入<br>
+                    <span style="color: #444;">2・3階1,100円、4・5階2,200円追加(内階段は、450Ｌ以上の冷蔵庫、ドラム式洗濯機、マッサージ機はユニック搬入見積必要です)</span>
+                </td>
+                <td style="font-size: 10px;" id="fxDelivOpt2"> □②ｴﾃﾞｨｵﾝの配達ｾﾝﾀｰを利用してお客様宅へ配達（※配達設置料金が必要となります）</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="font-size: 9px; color: #444;">冷蔵庫・洗濯機・テレビ・マッサージ機</td>
+                <td style="font-size: 10px;" id="fxDelivOpt3"> □③ ｴﾃﾞｨｵﾝ店舗での商品受取</td>
+            </tr>
+            <tr>
+                <td class="excel-lbl" rowspan="2">配達及び工事の<br>希望日時をご記入下さい<br><span style="font-size: 8px;">（※加盟店様へ納品の<br>場合はご指定できません）</span></td>
+                <td class="excel-lbl" style="width: 10%;">第一希望</td>
+                <td id="fxDate1" style="text-align: center; font-weight: bold;"> 月  日</td>
+                <td class="excel-lbl">第二希望</td>
+                <td id="fxDate2" style="text-align: center; font-weight: bold;"> 月  日</td>
+            </tr>
+            <tr>
+                <td class="excel-lbl">時間帯</td>
+                <td id="fxTime1" style="text-align: center; font-size: 10px;">午前 / 午後 / 夕方 / 指定なし</td>
+                <td class="excel-lbl">時間帯</td>
+                <td id="fxTime2" style="text-align: center; font-size: 10px;">午前 / 午後 / 夕方 / 指定なし</td>
+            </tr>
+        </table>
+
+        <table class="excel-table text-center">
+            <tr class="excel-lbl">
+                <td style="width: 14%;">メ－カ－名</td>
+                <td style="width: 25%;">商品名</td>
+                <td style="width: 21%;">商品型名</td>
+                <td style="width: 6%;">色</td>
+                <td style="width: 6%;">数量</td>
+                <td style="width: 14%;">提供価格（税込み）</td>
+                <td style="width: 14%;">配送料金(税込み）</td>
+                <td style="width: 10%;">リサイクル</td>
+            </tr>
+            <tr style="height: 24px;">
+                <td id="fxMaker"></td>
+                <td class="text-start" id="fxProdName"></td>
+                <td id="fxProdModel"></td>
+                <td id="fxProdColor"></td>
+                <td id="fxProdQty">1</td>
+                <td class="text-end" id="fxPrice"></td>
+                <td class="text-end" id="fxShipping"></td>
+                <td id="fxRecycle">有 ： 無</td>
+            </tr>
+            <tr style="height: 20px;"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td>有 ： 無</td></tr>
+            <tr style="height: 20px;"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td>有 ： 無</td></tr>
+            <tr style="height: 20px;"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td>有 ： 無</td></tr>
+            <tr style="font-weight: bold; background-color: #fafafa;">
+                <td colspan="5" class="text-end">合 計</td>
+                <td class="text-end" id="fxTotalPrice"></td>
+                <td class="text-end" id="fxTotalShipping"></td>
+                <td></td>
+            </tr>
+        </table>
+
+        <table class="excel-table">
+            <tr>
+                <td class="excel-lbl" style="width: 14%;" rowspan="2">連絡事項<br><span style="font-size: 9px;">加盟店様記入欄</span></td>
+                <td style="height: 42px; vertical-align: top; font-size: 10px;" id="fxMemo">
                 </td>
             </tr>
         </table>
 
-        <!-- 配達先状況・手配内容 -->
-        <table class="sheet-table">
+        <table class="excel-table">
             <tr>
-                <td style="width: 50%; vertical-align: top;">
-                    <strong>【配達先状況（階段手上げ）】</strong><br>
-                    搬入状況: <strong id="faxStairFloor">--</strong><br>
-                    <span style="font-size: 9px; color: #555;">※2・3階 1,100円、4・5階 2,200円追加（内階段の大型家電はユニック見積要）</span>
-                </td>
-                <td style="width: 50%; vertical-align: top;">
-                    <strong>【ご希望の手配内容】</strong><br>
-                    手配区分: <strong id="faxDeliveryType">--</strong>
-                </td>
+                <td class="excel-lbl" style="width: 14%;">発注店舗名</td>
+                <td style="width: 22%;">ESC <strong>中日新聞社</strong></td>
+                <td class="excel-lbl" style="width: 12%;">電話番号</td>
+                <td style="width: 20%; font-weight: bold;">052-201-8811</td>
+                <td class="excel-lbl" style="width: 12%;">担当者</td>
+                <td style="width: 20%; font-weight: bold;">販売局事業開発部 久保中</td>
             </tr>
             <tr>
-                <td colspan="2">
-                    <strong>【配達及び工事の希望日時】</strong>（※加盟店様納品の場合は指定不可）<br>
-                    第一希望: <span id="faxDeliveryDate1" style="font-weight: bold;">--</span> （時間帯: <span id="faxDeliveryTime1">--</span>） ｜
-                    第二希望: <span id="faxDeliveryDate2" style="font-weight: bold;">--</span> （時間帯: <span id="faxDeliveryTime2">--</span>）
-                </td>
+                <td class="excel-lbl">店舗コ－ド</td>
+                <td></td>
+                <td class="excel-lbl">FAX番号</td>
+                <td style="font-weight: bold;">052-221-0780</td>
+                <td class="excel-lbl">連絡先（携帯）</td>
+                <td style="font-weight: bold;">080-3501-9088</td>
             </tr>
         </table>
 
-        <!-- 商品明細 -->
-        <table class="sheet-table text-center">
-            <thead>
-                <tr>
-                    <th style="width: 15%;">メーカー名</th>
-                    <th style="width: 30%;">商品名</th>
-                    <th style="width: 20%;">商品型名</th>
-                    <th style="width: 8%;">色</th>
-                    <th style="width: 7%;">数量</th>
-                    <th style="width: 10%;">提供価格(税込)</th>
-                    <th style="width: 10%;">配送料金(税込)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td id="faxMakerName">--</td>
-                    <td class="text-start" id="faxProdName">--</td>
-                    <td id="faxProdModel">--</td>
-                    <td id="faxProdColor">--</td>
-                    <td id="faxProdQty">1</td>
-                    <td class="text-end" id="faxWholesalePrice">¥0</td>
-                    <td class="text-end" id="faxShippingFee">¥0</td>
-                </tr>
-                <tr>
-                    <td colspan="5" class="text-end fw-bold">合 計（税込）</td>
-                    <td class="text-end fw-bold" id="faxTotalWholesale">¥0</td>
-                    <td class="text-end fw-bold" id="faxTotalShipping">¥0</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <table class="sheet-table mb-2">
+        <table class="excel-table">
             <tr>
-                <th style="width: 20%;">リサイクル回収</th>
-                <td style="width: 30%;" id="faxRecycleInfo">無</td>
-                <th style="width: 20%;">連絡事項(加盟店欄)</th>
-                <td style="width: 30%;" id="faxMemo">特になし</td>
-            </tr>
-        </table>
-
-        <!-- 発注店舗情報 -->
-        <table class="sheet-table">
-            <tr>
-                <td style="width: 50%;">
-                    発注店舗名: <strong>ESC <span id="faxShopName">○○専売店</span></strong><br>
-                    店舗コード: <span id="faxShopCode">----</span> ｜ 電話: <span id="faxShopTel">--</span><br>
-                    FAX番号: <span id="faxShopFax">--</span>
-                </td>
-                <td style="width: 50%;">
-                    ご担当者名: <strong id="faxShopStaff">--</strong> 印<br>
-                    連絡先（携帯）: <span id="faxShopStaffTel">--</span>
-                </td>
-            </tr>
-        </table>
-
-        <!-- カード利用決済欄 -->
-        <table class="sheet-table" style="border: 2px solid #000;">
-            <tr>
-                <th colspan="3" style="background-color: #e6e6e6; text-align: left;">◆カード利用決済欄◆</th>
-                <th style="width: 100px; background-color: #e6e6e6;">会社印</th>
+                <td colspan="4" style="background-color: #e6e6e6; font-weight: bold; padding: 2px 6px;">◆カード利用決済欄◆</td>
+                <td rowspan="4" style="width: 75px; text-align: center; vertical-align: middle; background-color: #f7f7f7;" class="hanko-box">会社印</td>
             </tr>
             <tr>
-                <td style="width: 30%;">
-                    決済金額（税込）:<br>
-                    <strong class="fs-6" id="faxCardAmount">¥0 円</strong>
-                </td>
-                <td style="width: 40%;">
-                    カードNO:<br>
-                    <strong id="faxCardNo">---- - ---- - ---- - ----</strong>
-                </td>
-                <td style="width: 20%;">
-                    有効期限:<br>
-                    <span id="faxCardExp">-- 年 -- 月</span>
-                </td>
-                <td rowspan="2" class="hanko-cell" style="vertical-align: middle;">
-                    会社印
+                <td class="excel-lbl" style="width: 16%;">決済金額（税込）</td>
+                <td colspan="3" style="font-size: 14px; font-weight: bold; letter-spacing: 1px;" id="fxCardAmount">
                 </td>
             </tr>
             <tr>
-                <td colspan="3" style="font-size: 10px; color: #555;">
-                    【エディオン記入欄】 承認NO: ＿＿＿＿＿＿＿＿＿＿ ｜ 受付印: ＿＿＿＿＿＿＿＿
+                <td class="excel-lbl">カードＮＯ</td>
+                <td colspan="3" style="font-size: 13px; font-weight: bold; letter-spacing: 2px;" id="fxCardNo">
+                </td>
+            </tr>
+            <tr>
+                <td class="excel-lbl">有効期限</td>
+                <td style="width: 32%;" id="fxCardExp">
+                </td>
+                <td class="excel-lbl" style="width: 22%;">承認ＮＯ（エディオン記入）</td>
+                <td style="width: 20%;"></td>
+            </tr>
+            <tr>
+                <td colspan="5" style="font-size: 9px; color: #555; padding: 2px 6px;">
+                    【連絡事項：エディオン記入欄】
                 </td>
             </tr>
         </table>
     </div>
 
-    <!-- 帳票2: 【顧客提出用】御見積書 -->
-    <div id="docQuoteSheet" class="sheet-container" style="display: none;">
+    <!-- 2. 【顧客提出用】御見積書 -->
+    <div id="docQuoteSheet" class="excel-sheet-outer" style="display: none;">
         <div class="d-flex justify-content-between align-items-end border-bottom border-2 border-dark pb-2 mb-3">
             <div>
                 <h3 class="fw-bold mb-0" style="letter-spacing: 4px;">御 見 積 書</h3>
@@ -786,24 +781,20 @@
             </div>
             <div class="col-5">
                 <div class="border p-2 bg-white" style="font-size: 11px;">
-                    <div class="fw-bold border-bottom pb-1 mb-1">【発行元・お問合せ窓口】</div>
+                    <div class="fw-bold border-bottom pb-1 mb-1">【発行元・お問合せ専売店】</div>
                     <div>中日新聞専売店</div>
-                    <div class="fw-bold" style="font-size: 12px;" id="quoteShopName">○○専売店</div>
+                    <div class="fw-bold" style="font-size: 13px;" id="quoteShopName">○○専売店</div>
                     <div>TEL: <span id="quoteShopTel">--</span></div>
-                    <div>FAX: <span id="quoteShopFax">--</span></div>
-                    <div>ご担当: <span id="quoteShopStaff">--</span></div>
                     <div class="text-end mt-2">
-                        <div class="d-inline-block hanko-cell">専売店<br>認印</div>
+                        <div class="d-inline-block hanko-box" style="width: 48px; height: 48px; font-size: 9px; padding-top: 3px;">専売店<br>認印</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 見積明細 -->
-        <div class="fw-bold mb-1">【御見積明細】</div>
-        <table class="sheet-table text-center mb-3">
+        <table class="excel-table text-center mb-3">
             <thead>
-                <tr>
+                <tr class="excel-lbl">
                     <th style="width: 15%;">メーカー</th>
                     <th style="width: 35%;">品名・商品名</th>
                     <th style="width: 20%;">型番 / 色</th>
@@ -825,29 +816,29 @@
                     <td colspan="5" class="text-end">標準配送料・設置基本料</td>
                     <td class="text-end" id="quoteShipping">¥0</td>
                 </tr>
-                <tr>
-                    <td colspan="5" class="text-end fw-bold" style="background: #f9f9f9;">御見積合計金額（税込）</td>
-                    <td class="text-end fw-bold fs-6" style="background: #f9f9f9;" id="quoteGrandTotal">¥0</td>
+                <tr style="font-weight: bold; background: #f2f2f2;">
+                    <td colspan="5" class="text-end">御見積合計金額（税込）</td>
+                    <td class="text-end fs-6" id="quoteGrandTotal">¥0</td>
                 </tr>
             </tbody>
         </table>
 
-        <table class="sheet-table mb-3">
+        <table class="excel-table mb-3">
             <tr>
-                <th style="width: 25%;">納入予定・手配区分</th>
+                <th class="excel-lbl" style="width: 25%;">手配区分 / 納入予定</th>
                 <td id="quoteDeliveryType">--</td>
             </tr>
             <tr>
-                <th>家電リサイクル回収</th>
+                <th class="excel-lbl">家電リサイクル回収</th>
                 <td id="quoteRecycle">-- (※リサイクル料・収集運搬料は現地現金精算)</td>
             </tr>
             <tr>
-                <th>特記事項・備考</th>
-                <td id="quoteMemo">--</td>
+                <th class="excel-lbl">備考・特記事項</th>
+                <td id="quoteUserMemo">--</td>
             </tr>
         </table>
 
-        <div class="notice-text">
+        <div class="excel-notice">
             ※本お見積書は、中日新聞専売店と株式会社エディオンの提携サービスに基づき作成された特別ご提供価格です。<br>
             ※商品手配は発注確定後の手配となります。メーカー欠品等の際は別途納期をご案内いたします。
         </div>
@@ -860,12 +851,11 @@
     const SUPABASE_ANON_KEY = "sb_publishable_VRyL977GEsKTCs_hDIdtaA_418xVuf1";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const SHOPS = [{"code": "1001", "name": "中日新聞 名古屋栄専売店", "pref": "愛知県", "district": "名古屋", "branch": "中支部", "group": "1班", "tel": "052-200-0001", "fax": "052-200-0002"}, {"code": "1002", "name": "中日新聞 一宮専売店", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "2班", "tel": "0586-00-0002", "fax": "0586-00-0003"}];
+    const SHOPS = [{"code": "1001", "name": "中日新聞 名古屋栄専売店", "pref": "愛知県", "district": "名古屋", "branch": "中支部", "group": "1班", "tel": "052-200-0001"}, {"code": "1002", "name": "中日新聞 一宮専売店", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "2班", "tel": "0586-00-0002"}];
     let orders = [];
     let currentUser = null;
     let currentSelectedOrder = null;
 
-    // ログイン処理
     document.getElementById("loginForm").addEventListener("submit", (e) => {
         e.preventDefault();
         const id = document.getElementById("loginId").value.trim();
@@ -881,7 +871,7 @@
 
     function authenticate(id, pw) {
         if (id === "admin" && pw === "admin123") {
-            currentUser = { role: "admin", name: "中日新聞社 本部統括", code: "HEAD", tel: "052-201-8811", fax: "052-201-8812" };
+            currentUser = { role: "admin", name: "中日新聞社 本部統括", code: "HEAD", tel: "052-201-8811" };
             applyRoleUI();
             return;
         }
@@ -928,8 +918,7 @@
 
             document.getElementById("fixedShopName").textContent = currentUser.shop.name;
             document.getElementById("fixedShopCode").textContent = currentUser.shop.code;
-            document.getElementById("fixedShopTel").textContent = `TEL: ${currentUser.shop.tel} / FAX: ${currentUser.shop.fax || "未登録"}`;
-            document.getElementById("shopFax").value = currentUser.shop.fax || "";
+            document.getElementById("fixedShopTel").textContent = `TEL: ${currentUser.shop.tel}`;
             
             const orderTab = new bootstrap.Tab(document.getElementById("order-tab"));
             orderTab.show();
@@ -946,7 +935,6 @@
         document.getElementById("loginView").style.display = "block";
     }
 
-    // Supabaseから注文データを取得
     async function loadOrdersFromSupabase() {
         const tbody = document.getElementById("ordersTableBody");
         tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Supabaseから最新データを読込中...</td></tr>';
@@ -967,24 +955,22 @@
         }
     }
 
-    // 価格計算
     function calcPrices() {
         const wholesale = parseFloat(document.getElementById("wholesalePrice").value) || 0;
         const shipping = parseFloat(document.getElementById("shippingFee").value) || 0;
         const selling = parseFloat(document.getElementById("sellingPrice").value) || 0;
         const qty = parseInt(document.getElementById("prodQty").value) || 1;
 
-        const totalWholesale = (wholesale * qty) + shipping;
+        const totalPayment = (wholesale * qty) + shipping;
         const profit = (selling - wholesale) * qty;
         const margin = (selling * qty) > 0 ? ((profit / (selling * qty)) * 100).toFixed(1) : "0.0";
 
-        document.getElementById("totalEdionPayment").textContent = `¥${totalWholesale.toLocaleString()}`;
+        document.getElementById("totalEdionPayment").textContent = `¥${totalPayment.toLocaleString()}`;
         const pDisp = document.getElementById("profitDisplay");
         pDisp.textContent = `¥${profit.toLocaleString()} (${margin}%)`;
         pDisp.className = profit >= 0 ? "fs-6 text-success fw-bold" : "fs-6 text-danger fw-bold";
     }
 
-    // 受注・見積登録処理 (Supabaseへ保存)
     document.getElementById("orderForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const submitBtn = document.getElementById("submitBtn");
@@ -999,7 +985,7 @@
                 const code = document.getElementById("selectShop").value;
                 targetShop = SHOPS.find(s => s.code === code);
                 if (!targetShop) {
-                    alert("専売店を選択してください。");
+                    alert("取扱専売店を選択してください。");
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="bi bi-cloud-arrow-up me-1"></i>受注データを登録してSupabaseに保存';
                     return;
@@ -1011,14 +997,15 @@
             const selling = parseFloat(document.getElementById("sellingPrice").value) || 0;
             const qty = parseInt(document.getElementById("prodQty").value) || 1;
 
+            const expY = document.getElementById("cardExpYear").value.trim();
+            const expM = document.getElementById("cardExpMonth").value.trim();
+            const cardExpStr = (expY && expM) ? `${expY}年 ${expM}月` : "";
+
             const orderPayload = {
                 order_no: "ED-" + Date.now().toString().slice(-6),
                 shop_code: targetShop.code,
                 shop_name: targetShop.name,
                 shop_tel: targetShop.tel,
-                shop_fax: document.getElementById("shopFax").value,
-                shop_staff: document.getElementById("shopStaff").value,
-                shop_staff_tel: document.getElementById("shopStaffTel").value,
                 cust_kana: document.getElementById("custKana").value,
                 cust_name: document.getElementById("custName").value,
                 cust_tel: document.getElementById("custTel").value,
@@ -1042,7 +1029,7 @@
                 profit: (selling - wholesale) * qty,
                 recycle_info: document.getElementById("recycleSelect").value,
                 card_no: document.getElementById("cardNo").value,
-                card_exp: document.getElementById("cardExp").value,
+                card_exp: cardExpStr,
                 memo: document.getElementById("orderMemo").value,
                 status: "未送信(FAX待ち)"
             };
@@ -1050,7 +1037,7 @@
             const { data, error } = await supabaseClient.from("orders").insert([orderPayload]).select();
             if (error) throw error;
 
-            alert("【保存成功】Supabaseに登録しました！発注書・見積書のプレビュー画面を開きます。");
+            alert("【保存成功】Supabaseに登録しました！エディオン公式発注書のプレビュー画面を開きます。");
             document.getElementById("orderForm").reset();
             calcPrices();
             await loadOrdersFromSupabase();
@@ -1064,7 +1051,6 @@
         }
     });
 
-    // 一覧描画
     function renderOrders() {
         const tbody = document.getElementById("ordersTableBody");
         document.getElementById("orderCountBadge").textContent = orders.length;
@@ -1085,7 +1071,7 @@
                         <td><strong>${o.order_no}</strong><br><small class="text-muted">${orderDate}</small></td>
                         <td>${o.shop_name}<br><small class="text-muted">${o.shop_code}</small></td>
                         <td><strong>${o.cust_name}</strong> 様<br><small class="text-muted">${o.cust_tel || o.cust_mobile || ""}</small></td>
-                        <td><span class="badge bg-secondary me-1">${o.maker_name || ""}</span><strong>${o.prod_name}</strong><br><small class="text-muted">${o.prod_model || ""} (${o.prod_color || "色指定無"}) ×${o.qty}</small></td>
+                        <td><span class="badge bg-secondary me-1">${o.maker_name || ""}</span><strong>${o.prod_name}</strong><br><small class="text-muted">${o.prod_model || ""} (${o.prod_color || "指定無"}) ×${o.qty}</small></td>
                         <td>¥${itemTotalWholesale.toLocaleString()}</td>
                         <td>¥${((o.selling_price || 0) * (o.qty || 1)).toLocaleString()}</td>
                         <td class="text-success fw-bold">¥${(o.profit || 0).toLocaleString()}</td>
@@ -1093,10 +1079,10 @@
                         <td class="text-center">
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-primary" onclick="openPrintModal('${o.order_no}', 'order')">
-                                    <i class="bi bi-printer me-1"></i>発注書
+                                    <i class="bi bi-printer me-1"></i>公式発注書
                                 </button>
                                 <button class="btn btn-outline-success" onclick="openPrintModal('${o.order_no}', 'quote')">
-                                    <i class="bi bi-receipt me-1"></i>見積書
+                                    <i class="bi bi-receipt me-1"></i>御見積書
                                 </button>
                             </div>
                         </td>
@@ -1110,60 +1096,66 @@
         document.getElementById("statTotalProfit").textContent = `¥${totalProfit.toLocaleString()}`;
     }
 
-    // 帳票プレビューを開く
     function openPrintModal(orderNo, mode) {
         const o = orders.find(x => x.order_no === orderNo);
         if (!o) return;
         currentSelectedOrder = o;
 
-        const orderDate = o.created_at ? new Date(o.created_at).toLocaleDateString("ja-JP") : new Date().toLocaleDateString("ja-JP");
+        const dateObj = o.created_at ? new Date(o.created_at) : new Date();
+        const dateStr = `${dateObj.getFullYear()}年 ${dateObj.getMonth() + 1}月 ${dateObj.getDate()}日`;
         const qty = o.qty || 1;
         const wholesale = o.wholesale_price || 0;
         const shipping = o.shipping_fee || 0;
         const selling = o.selling_price || 0;
-        const totalEdion = (wholesale * qty) + shipping;
+        const totalPayment = (wholesale * qty) + shipping;
 
-        // 1. 発注書データの流し込み
-        document.getElementById("faxPrintDate").textContent = orderDate;
-        document.getElementById("faxOrderNo").textContent = o.order_no;
-        document.getElementById("faxCustKana").textContent = o.cust_kana || "--";
-        document.getElementById("faxCustName").textContent = o.cust_name;
-        document.getElementById("faxCustTel").textContent = o.cust_tel || "--";
-        document.getElementById("faxCustMobile").textContent = o.cust_mobile || "--";
-        document.getElementById("faxCustZip").textContent = o.cust_zip || "---";
-        document.getElementById("faxCustAddress").textContent = o.cust_address;
-        document.getElementById("faxStairFloor").textContent = o.stair_floor || "階段手上げなし";
-        document.getElementById("faxDeliveryType").textContent = o.delivery_type || "--";
-        document.getElementById("faxDeliveryDate1").textContent = o.delivery_date_1 || "指定なし";
-        document.getElementById("faxDeliveryTime1").textContent = o.delivery_time_1 || "指定なし";
-        document.getElementById("faxDeliveryDate2").textContent = o.delivery_date_2 || "指定なし";
-        document.getElementById("faxDeliveryTime2").textContent = o.delivery_time_2 || "指定なし";
+        // 1. 【ハッチュウ】原本Excel完全再現シート
+        document.getElementById("fxDateTop").textContent = dateStr;
+        document.getElementById("fxCustKana").textContent = o.cust_kana || "";
+        document.getElementById("fxCustName").textContent = o.cust_name || "";
+        document.getElementById("fxCustTel").textContent = o.cust_tel || "";
+        document.getElementById("fxCustMobile").textContent = o.cust_mobile || "";
 
-        document.getElementById("faxMakerName").textContent = o.maker_name || "--";
-        document.getElementById("faxProdName").textContent = o.prod_name;
-        document.getElementById("faxProdModel").textContent = o.prod_model || "--";
-        document.getElementById("faxProdColor").textContent = o.prod_color || "--";
-        document.getElementById("faxProdQty").textContent = qty;
-        document.getElementById("faxWholesalePrice").textContent = `¥${wholesale.toLocaleString()}`;
-        document.getElementById("faxShippingFee").textContent = `¥${shipping.toLocaleString()}`;
-        document.getElementById("faxTotalWholesale").textContent = `¥${(wholesale * qty).toLocaleString()}`;
-        document.getElementById("faxTotalShipping").textContent = `¥${shipping.toLocaleString()}`;
-        document.getElementById("faxRecycleInfo").textContent = o.recycle_info || "無";
-        document.getElementById("faxMemo").textContent = o.memo || "特になし";
+        const zip = (o.cust_zip || "").replace(/[^0-9]/g, "");
+        document.getElementById("fxCustZip3").textContent = zip.slice(0, 3) || "   ";
+        document.getElementById("fxCustZip4").textContent = zip.slice(3, 7) || "    ";
+        document.getElementById("fxCustAddress").textContent = o.cust_address || "";
 
-        document.getElementById("faxShopName").textContent = o.shop_name;
-        document.getElementById("faxShopCode").textContent = o.shop_code;
-        document.getElementById("faxShopTel").textContent = o.shop_tel || "--";
-        document.getElementById("faxShopFax").textContent = o.shop_fax || "--";
-        document.getElementById("faxShopStaff").textContent = o.shop_staff || "--";
-        document.getElementById("faxShopStaffTel").textContent = o.shop_staff_tel || "--";
+        const dt = String(o.delivery_type || "2");
+        document.getElementById("fxDelivOpt1").innerHTML = dt === "1" ? " <strong>☑① 加盟店様に納品</strong>" : " □① 加盟店様に納品";
+        document.getElementById("fxDelivOpt2").innerHTML = dt === "2" ? " <strong>☑②ｴﾃﾞｨｵﾝの配達ｾﾝﾀｰを利用してお客様宅へ配達</strong>" : " □②ｴﾃﾞｨｵﾝの配達ｾﾝﾀｰを利用してお客様宅へ配達（※配達設置料金が必要となります）";
+        document.getElementById("fxDelivOpt3").innerHTML = dt === "3" ? " <strong>☑③ ｴﾃﾞｨｵﾝ店舗での商品受取</strong>" : " □③ ｴﾃﾞｨｵﾝ店舗での商品受取";
 
-        document.getElementById("faxCardAmount").textContent = `¥${totalEdion.toLocaleString()} 円`;
-        document.getElementById("faxCardNo").textContent = o.card_no || "---- - ---- - ---- - ----";
-        document.getElementById("faxCardExp").textContent = o.card_exp || "-- 年 -- 月";
+        document.getElementById("fxFloorNum").textContent = o.stair_floor ? (" " + o.stair_floor + " ") : "     ";
 
-        // 2. 見積書データの流し込み
-        document.getElementById("quoteDate").textContent = orderDate;
+        document.getElementById("fxDate1").textContent = o.delivery_date_1 ? o.delivery_date_1.replace(/-/g, "/") : " 月  日";
+        document.getElementById("fxTime1").textContent = o.delivery_time_1 || "指定なし";
+        document.getElementById("fxDate2").textContent = o.delivery_date_2 ? o.delivery_date_2.replace(/-/g, "/") : " 月  日";
+        document.getElementById("fxTime2").textContent = o.delivery_time_2 || "指定なし";
+
+        document.getElementById("fxMaker").textContent = o.maker_name || "";
+        document.getElementById("fxProdName").textContent = o.prod_name || "";
+        document.getElementById("fxProdModel").textContent = o.prod_model || "";
+        document.getElementById("fxProdColor").textContent = o.prod_color || "";
+        document.getElementById("fxProdQty").textContent = qty;
+        document.getElementById("fxPrice").textContent = `¥${wholesale.toLocaleString()}`;
+        document.getElementById("fxShipping").textContent = shipping > 0 ? `¥${shipping.toLocaleString()}` : "¥0";
+        document.getElementById("fxTotalPrice").textContent = `¥${(wholesale * qty).toLocaleString()}`;
+        document.getElementById("fxTotalShipping").textContent = `¥${shipping.toLocaleString()}`;
+
+        const isRecycle = (o.recycle_info || "").includes("有");
+        document.getElementById("fxRecycle").innerHTML = isRecycle ? "<strong>【有】</strong>： 無" : "有 ： <strong>【無】</strong>";
+
+        const memoShop = `【取扱専売店】中日新聞 ${o.shop_name} (店コード: ${o.shop_code})`;
+        const memoUser = o.memo ? `\n${o.memo}` : "";
+        document.getElementById("fxMemo").innerText = memoShop + memoUser;
+
+        document.getElementById("fxCardAmount").textContent = `¥ ${totalPayment.toLocaleString()} 円`;
+        document.getElementById("fxCardNo").textContent = o.card_no || "---- - ---- - ---- - ----";
+        document.getElementById("fxCardExp").textContent = o.card_exp || "-- 年 -- 月";
+
+        // 2. 【御見積書】
+        document.getElementById("quoteDate").textContent = dateStr;
         document.getElementById("quoteNo").textContent = "EST-" + o.order_no.replace("ED-", "");
         document.getElementById("quoteCustName").textContent = o.cust_name;
         document.getElementById("quoteCustZip").textContent = o.cust_zip || "---";
@@ -1172,28 +1164,26 @@
 
         const quoteTotal = (selling * qty) + shipping;
         document.getElementById("quoteTotalAmount").textContent = `¥${quoteTotal.toLocaleString()} -`;
-
         document.getElementById("quoteShopName").textContent = o.shop_name;
         document.getElementById("quoteShopTel").textContent = o.shop_tel || "--";
-        document.getElementById("quoteShopFax").textContent = o.shop_fax || "--";
-        document.getElementById("quoteShopStaff").textContent = o.shop_staff || "--";
 
         document.getElementById("quoteMaker").textContent = o.maker_name || "--";
         document.getElementById("quoteProdName").textContent = o.prod_name;
-        document.getElementById("quoteModelColor").textContent = `${o.prod_model || ""} (${o.prod_color || "指定なし"})`;
+        document.getElementById("quoteModelColor").textContent = `${o.prod_model || ""} (${o.prod_color || "指定無"})`;
         document.getElementById("quoteQty").textContent = qty;
         document.getElementById("quoteUnitPrice").textContent = `¥${selling.toLocaleString()}`;
         document.getElementById("quoteSubtotal").textContent = `¥${(selling * qty).toLocaleString()}`;
         document.getElementById("quoteShipping").textContent = `¥${shipping.toLocaleString()}`;
         document.getElementById("quoteGrandTotal").textContent = `¥${quoteTotal.toLocaleString()}`;
 
-        document.getElementById("quoteDeliveryType").textContent = `${o.delivery_type || "--"} (${o.stair_floor || ""})`;
-        document.getElementById("quoteRecycle").textContent = o.recycle_info || "無";
-        document.getElementById("quoteMemo").textContent = o.memo || "特記事項なし";
+        let delivLabel = "エディオン配達センターより配達設置";
+        if (dt === "1") delivLabel = "専売店よりお届け・納品";
+        if (dt === "3") delivLabel = "エディオン店舗にてお受取り";
+        document.getElementById("quoteDeliveryType").textContent = delivLabel;
+        document.getElementById("quoteRecycle").textContent = isRecycle ? "リサイクル回収あり" : "回収なし";
+        document.getElementById("quoteUserMemo").textContent = o.memo || "特になし";
 
-        // モード表示切替
         switchPrintDoc(mode);
-
         document.getElementById("printArea").style.display = "block";
         window.scrollTo(0, document.getElementById("printArea").offsetTop);
     }
@@ -1221,7 +1211,39 @@
         document.getElementById("printArea").style.display = "none";
     }
 
-    // マスタ絞り込み
+    function downloadCurrentExcel() {
+        if (!currentSelectedOrder) return;
+        const docHtml = document.getElementById("docOrderSheet").outerHTML;
+        const excelTemplate = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="utf-8">
+                <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+                <x:Name>発注書兼配達工事依頼書</x:Name>
+                <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+                </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+                <style>
+                    body { font-family: "MS PGothic", "ＭＳ Ｐゴシック", sans-serif; font-size: 11px; }
+                    table { border-collapse: collapse; }
+                    td, th { border: 1px solid #000; padding: 4px; }
+                    .excel-lbl { background-color: #e6e6e6; }
+                </style>
+            </head>
+            <body>
+                ${docHtml}
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob([excelTemplate], { type: "application/vnd.ms-excel;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `EDION発注書_${currentSelectedOrder.order_no}_${currentSelectedOrder.cust_name}.xls`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
     function initShopFilters() {
         const prefs = [...new Set(SHOPS.map(s => s.pref).filter(Boolean))];
         const prefSelect = document.getElementById("filterPref");
@@ -1289,14 +1311,6 @@
         });
     }
 
-    function onAdminShopSelected() {
-        const code = document.getElementById("selectShop").value;
-        const shop = SHOPS.find(s => s.code === code);
-        if (shop) {
-            document.getElementById("shopFax").value = shop.fax || "";
-        }
-    }
-
     function renderMasterTable(list) {
         const tbody = document.getElementById("masterShopTableBody");
         tbody.innerHTML = list.slice(0, 100).map(s => `
@@ -1308,7 +1322,6 @@
                 <td>${s.branch}</td>
                 <td>${s.group}</td>
                 <td>${s.tel}</td>
-                <td>${s.fax || "-"}</td>
             </tr>
         `).join("");
     }
@@ -1332,9 +1345,9 @@
             alert("出力する受注データがありません。");
             return;
         }
-        const headers = ["発注No", "登録日", "店舗コード", "専売店名", "担当者", "顧客名", "電話番号", "配送先住所", "手配内容", "メーカー", "商品名", "型番", "色", "数量", "卸価格", "配送料", "提示売価", "粗利", "ステータス"];
+        const headers = ["発注No", "登録日", "店舗コード", "専売店名", "顧客名", "電話番号", "住所", "手配内容", "メーカー", "商品名", "型番", "色", "数量", "卸価格", "配送料", "提示売価", "粗利", "ステータス"];
         const rows = orders.map(o => [
-            o.order_no, o.created_at ? o.created_at.slice(0,10) : "", o.shop_code, `"${o.shop_name}"`, `"${o.shop_staff || ""}"`, `"${o.cust_name}"`, o.cust_tel || o.cust_mobile, `"${o.cust_address}"`, `"${o.delivery_type || ""}"`, `"${o.maker_name || ""}"`, `"${o.prod_name}"`, o.prod_model || "", o.prod_color || "", o.qty, o.wholesale_price, o.shipping_fee, o.selling_price, o.profit, o.status
+            o.order_no, o.created_at ? o.created_at.slice(0,10) : "", o.shop_code, `"${o.shop_name}"`, `"${o.cust_name}"`, o.cust_tel || o.cust_mobile, `"${o.cust_address}"`, `"${o.delivery_type || ""}"`, `"${o.maker_name || ""}"`, `"${o.prod_name}"`, o.prod_model || "", o.prod_color || "", o.qty, o.wholesale_price, o.shipping_fee, o.selling_price, o.profit, o.status
         ]);
         const csvContent = "﻿" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
