@@ -13,7 +13,7 @@
             --chunichi-blue: #0f2350;
         }
         body {
-            background-color: #f8f9fa;
+            background-color: #f4f6f9;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
         .navbar-brand-custom {
@@ -21,28 +21,20 @@
             color: white !important;
             padding: 12px 20px;
         }
-        .badge-esc {
-            background-color: var(--edion-orange);
-            color: white;
-            font-size: 0.8rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        .nav-tabs .nav-link.active {
-            font-weight: bold;
-            color: var(--edion-blue);
-            border-bottom: 3px solid var(--edion-blue);
-        }
-        .nav-tabs .nav-link {
-            color: #495057;
-        }
         .card-custom {
             border-radius: 8px;
             border: 1px solid #e3e6f0;
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.08);
         }
+        .login-card {
+            max-width: 450px;
+            margin: 60px auto;
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
 
-        /* FAX印刷レイアウト (A4 1枚に収めるスタイル) */
+        /* FAX印刷レイアウト (A4 1枚用) */
         @media print {
             body * {
                 visibility: hidden;
@@ -101,290 +93,352 @@
 </head>
 <body>
 
-<!-- ナビゲーションバー -->
-<nav class="navbar navbar-expand-lg navbar-brand-custom shadow-sm">
-    <div class="container-fluid">
-        <a class="navbar-brand text-white fw-bold d-flex align-items-center" href="#">
-            <i class="bi bi-newspaper me-2 fs-4"></i>
-            中日新聞専売店 家電受発注ポータル
-            <span class="badge badge-esc ms-3">EDION ESC提携</span>
-        </a>
-        <div class="d-flex text-white small align-items-center">
-            <span class="me-3"><i class="bi bi-shop me-1"></i>加盟専売店: <strong>1,163 店舗</strong> 連携済</span>
-            <span class="badge bg-light text-dark">クラウド稼働中</span>
+<!-- ================= 1. ログイン画面 ================= -->
+<div id="loginView" class="container">
+    <div class="card login-card p-4">
+        <div class="text-center mb-4">
+            <div class="d-inline-flex p-3 rounded-circle bg-light text-primary mb-2">
+                <i class="bi bi-shield-lock fs-1"></i>
+            </div>
+            <h4 class="fw-bold text-dark">家電受発注ポータル ログイン</h4>
+            <div class="text-muted small">中日新聞専売店 × EDION サポートチェーン提携</div>
+        </div>
+
+        <form id="loginForm">
+            <div class="mb-3">
+                <label class="form-label small fw-bold">ログインID</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input type="text" class="form-control" id="loginId" placeholder="管理者ID または 店舗コード" required>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label small fw-bold">パスワード</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-key"></i></span>
+                    <input type="password" class="form-control" id="loginPassword" placeholder="パスワードを入力" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold mb-3">
+                <i class="bi bi-box-arrow-in-right me-1"></i>ログイン
+            </button>
+        </form>
+
+        <!-- 動作確認用クイックログインボタン -->
+        <div class="bg-light p-3 rounded border mt-2">
+            <div class="small fw-bold text-secondary mb-2"><i class="bi bi-lightning-charge me-1"></i>動作テスト用 クイック切替:</div>
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-outline-dark btn-sm text-start" onclick="quickLogin('admin', 'admin123')">
+                    <strong>① 中日新聞社 本部管理者としてログイン</strong><br>
+                    <small class="text-muted">（全機能・全店舗マスタ・相殺集計を閲覧可能）</small>
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-sm text-start" onclick="quickLogin('1001', 'shop123')">
+                    <strong>② 専売店としてログイン: 中日新聞 名古屋栄専売店</strong><br>
+                    <small class="text-muted">（自店専用の新規受注・発注書作成画面のみ表示）</small>
+                </button>
+            </div>
         </div>
     </div>
-</nav>
+</div>
 
-<div class="container my-4 no-print">
-    <!-- タブメニュー -->
-    <ul class="nav nav-tabs mb-4" id="portalTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="order-tab" data-bs-toggle="tab" data-bs-target="#order-pane" type="button" role="tab">
-                <i class="bi bi-cart-plus me-1"></i>新規受注・発注書作成
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane" type="button" role="tab">
-                <i class="bi bi-card-list me-1"></i>受注一覧・FAX出力管理 (<span id="orderCountBadge">0</span>)
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="shops-tab" data-bs-toggle="tab" data-bs-target="#shops-pane" type="button" role="tab">
-                <i class="bi bi-geo-alt me-1"></i>専売店マスタ検索 (1,163店)
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary-pane" type="button" role="tab">
-                <i class="bi bi-cash-stack me-1"></i>月次新聞代相殺集計
-            </button>
-        </li>
-    </ul>
+<!-- ================= 2. ポータル本体画面 ================= -->
+<div id="portalView" style="display: none;">
+    <!-- ナビゲーションバー -->
+    <nav class="navbar navbar-expand-lg navbar-brand-custom shadow-sm no-print">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white fw-bold d-flex align-items-center" href="#">
+                <i class="bi bi-newspaper me-2 fs-4"></i>
+                中日新聞専売店 家電受発注ポータル
+                <span class="badge bg-warning text-dark ms-3" id="currentRoleBadge">管理者</span>
+            </a>
+            <div class="d-flex text-white align-items-center">
+                <span class="me-3 small" id="currentUserDisplay"><i class="bi bi-person-circle me-1"></i>中日新聞社 本部</span>
+                <button class="btn btn-sm btn-outline-light" onclick="logout()">
+                    <i class="bi bi-box-arrow-right me-1"></i>ログアウト
+                </button>
+            </div>
+        </div>
+    </nav>
 
-    <!-- タブコンテンツ -->
-    <div class="tab-content" id="portalTabContent">
-        
-        <!-- 1. 新規受注登録タブ -->
-        <div class="tab-pane fade show active" id="order-pane" role="tabpanel">
-            <div class="card card-custom p-4">
-                <h5 class="fw-bold text-primary mb-3 border-bottom pb-2">
-                    <i class="bi bi-pencil-square me-2"></i>家電受注登録フォーム（持ち帰り見積・EDION FAX発注用）
-                </h5>
-                <form id="orderForm">
-                    <!-- 販売店情報 -->
-                    <div class="bg-light p-3 rounded mb-3 border">
-                        <h6 class="fw-bold text-secondary mb-2">① 発注専売店情報（中日新聞店）</h6>
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">県</label>
-                                <select class="form-select" id="filterPref" onchange="onPrefChange()">
-                                    <option value="">県を選択</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">地区</label>
-                                <select class="form-select" id="filterDistrict" onchange="onDistrictChange()">
-                                    <option value="">地区を選択</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">支部</label>
-                                <select class="form-select" id="filterBranch" onchange="onBranchChange()">
-                                    <option value="">支部を選択</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">発注店舗名（確定）</label>
-                                <select class="form-select border-primary" id="selectShop" required onchange="onShopSelect()">
-                                    <option value="">専売店を選択してください</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mt-2 text-muted small" id="selectedShopDetail">
-                            ※店舗を選択すると、FAX発注書の発信元情報に自動反映されます。
-                        </div>
-                    </div>
+    <div class="container my-4 no-print">
+        <!-- タブメニュー -->
+        <ul class="nav nav-tabs mb-4" id="portalTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="order-tab" data-bs-toggle="tab" data-bs-target="#order-pane" type="button" role="tab">
+                    <i class="bi bi-cart-plus me-1"></i>新規受注・発注書作成
+                </button>
+            </li>
+            <!-- 管理者専用タブ群 -->
+            <li class="nav-item admin-only" role="presentation">
+                <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane" type="button" role="tab">
+                    <i class="bi bi-card-list me-1"></i>受注一覧・発注管理 (<span id="orderCountBadge">0</span>)
+                </button>
+            </li>
+            <li class="nav-item admin-only" role="presentation">
+                <button class="nav-link" id="shops-tab" data-bs-toggle="tab" data-bs-target="#shops-pane" type="button" role="tab">
+                    <i class="bi bi-shop me-1"></i>販売店マスタ管理 (2店)
+                </button>
+            </li>
+            <li class="nav-item admin-only" role="presentation">
+                <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary-pane" type="button" role="tab">
+                    <i class="bi bi-calculator me-1"></i>月次新聞代相殺集計
+                </button>
+            </li>
+        </ul>
 
-                    <!-- エンドユーザー顧客情報 -->
-                    <div class="bg-light p-3 rounded mb-3 border">
-                        <h6 class="fw-bold text-secondary mb-2">② お届け先・お客様情報（新聞読者）</h6>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">顧客氏名</label>
-                                <input type="text" class="form-control" id="custName" placeholder="例: 中日 太郎 様" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">連絡先電話番号</label>
-                                <input type="tel" class="form-control" id="custTel" placeholder="例: 052-123-4567" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">配達希望日</label>
-                                <input type="date" class="form-control" id="deliveryDate">
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label small fw-bold">配送先住所</label>
-                                <input type="text" class="form-control" id="custAddress" placeholder="例: 愛知県名古屋市中区栄1-2-3 ○○マンション401" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 家電商品・価格情報 -->
-                    <div class="bg-light p-3 rounded mb-3 border">
-                        <h6 class="fw-bold text-secondary mb-2">③ 発注商品・価格設定</h6>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">商品名</label>
-                                <input type="text" class="form-control" id="prodName" placeholder="例: 4K液晶テレビ 55V型" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">型番</label>
-                                <input type="text" class="form-control" id="prodModel" placeholder="例: 4T-C55EN1" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">数量</label>
-                                <input type="number" class="form-control" id="prodQty" value="1" min="1" required onchange="calcPrices()">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">EDION卸価格（税抜）</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">¥</span>
-                                    <input type="number" class="form-control" id="wholesalePrice" placeholder="卸価格" required oninput="calcPrices()">
-                                </div>
-                                <div class="form-text small">※ESC専用サイトの卸価格を入力</div>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">顧客への提示売価（税抜）</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">¥</span>
-                                    <input type="number" class="form-control" id="sellingPrice" placeholder="販売価格" required oninput="calcPrices()">
+        <!-- タブコンテンツ -->
+        <div class="tab-content" id="portalTabContent">
+            
+            <!-- 1. 新規受注登録タブ（販売店・管理者の両方が利用可能） -->
+            <div class="tab-pane fade show active" id="order-pane" role="tabpanel">
+                <div class="card card-custom p-4">
+                    <h5 class="fw-bold text-primary mb-3 border-bottom pb-2">
+                        <i class="bi bi-pencil-square me-2"></i>家電受注登録フォーム（持ち帰り見積・EDION FAX発注用）
+                    </h5>
+                    <form id="orderForm">
+                        <!-- 販売店情報の指定部 -->
+                        <div class="bg-light p-3 rounded mb-3 border">
+                            <h6 class="fw-bold text-secondary mb-2">① 発注専売店情報（中日新聞店）</h6>
+                            
+                            <!-- 管理者用：1,163店から絞り込み検索 -->
+                            <div id="adminShopSelector">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">県</label>
+                                        <select class="form-select" id="filterPref" onchange="onPrefChange()">
+                                            <option value="">県を選択</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">地区</label>
+                                        <select class="form-select" id="filterDistrict" onchange="onDistrictChange()">
+                                            <option value="">地区を選択</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">支部</label>
+                                        <select class="form-select" id="filterBranch" onchange="onBranchChange()">
+                                            <option value="">支部を選択</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">発注専売店（確定）</label>
+                                        <select class="form-select border-primary" id="selectShop" onchange="onShopSelect()">
+                                            <option value="">専売店を選択してください</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">専売店 粗利見込（1台あたり）</label>
-                                <div class="form-control bg-white text-success fw-bold" id="profitDisplay">¥0 (0.0%)</div>
+
+                            <!-- 販売店用：自店舗に完全固定 -->
+                            <div id="storeShopFixed" style="display: none;">
+                                <div class="alert alert-info py-2 mb-0 d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill fs-5 me-2 text-primary"></i>
+                                    <div>
+                                        発注店舗: <strong id="fixedShopName" class="fs-6">--</strong>
+                                        <span class="badge bg-secondary ms-2" id="fixedShopCode">--</span>
+                                        <div class="small text-muted" id="fixedShopInfo">--</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- 搬入環境・リサイクル -->
-                    <div class="bg-light p-3 rounded mb-3 border">
-                        <h6 class="fw-bold text-secondary mb-2">④ 搬入環境・リサイクル回収情報（EDION FAX必須事項）</h6>
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">設置階数・住居形態</label>
-                                <input type="text" class="form-control" id="floorInfo" placeholder="例: 戸建て1階 / マンション4階">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">エレベーター</label>
-                                <select class="form-select" id="elevatorInfo">
-                                    <option value="あり">あり</option>
-                                    <option value="なし（階段搬入）">なし（階段搬入）</option>
-                                    <option value="戸建1階のため不要">戸建1階のため不要</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">リサイクル回収</label>
-                                <select class="form-select" id="recycleSelect">
-                                    <option value="なし">なし</option>
-                                    <option value="テレビ引き取り希望（現場現金精算）">テレビ引き取り希望（現場現金精算）</option>
-                                    <option value="冷蔵庫引き取り希望（現場現金精算）">冷蔵庫引き取り希望（現場現金精算）</option>
-                                    <option value="洗濯機引き取り希望（現場現金精算）">洗濯機引き取り希望（現場現金精算）</option>
-                                    <option value="エアコン引き取り希望（現場現金精算）">エアコン引き取り希望（現場現金精算）</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">決済区分</label>
-                                <input type="text" class="form-control bg-light" value="EDION B to B Card (翌月27日)" readonly>
+                        <!-- 顧客情報 -->
+                        <div class="bg-light p-3 rounded mb-3 border">
+                            <h6 class="fw-bold text-secondary mb-2">② お届け先・お客様情報（新聞読者）</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">顧客氏名</label>
+                                    <input type="text" class="form-control" id="custName" placeholder="例: 中日 太郎 様" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">連絡先電話番号</label>
+                                    <input type="tel" class="form-control" id="custTel" placeholder="例: 052-123-4567" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">配達希望日</label>
+                                    <input type="date" class="form-control" id="deliveryDate">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-bold">配送先住所</label>
+                                    <input type="text" class="form-control" id="custAddress" placeholder="例: 愛知県名古屋市中区栄1-2-3" required>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary btn-lg px-5">
-                            <i class="bi bi-check-circle me-1"></i>受注を登録して発注書を生成
+                        <!-- 商品・価格設定 -->
+                        <div class="bg-light p-3 rounded mb-3 border">
+                            <h6 class="fw-bold text-secondary mb-2">③ 発注商品・価格設定</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">商品名</label>
+                                    <input type="text" class="form-control" id="prodName" placeholder="例: 4K液晶テレビ 55V型" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">型番</label>
+                                    <input type="text" class="form-control" id="prodModel" placeholder="例: 4T-C55EN1" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">数量</label>
+                                    <input type="number" class="form-control" id="prodQty" value="1" min="1" required onchange="calcPrices()">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">EDION卸価格（税抜）</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">¥</span>
+                                        <input type="number" class="form-control" id="wholesalePrice" placeholder="卸価格" required oninput="calcPrices()">
+                                    </div>
+                                    <div class="form-text small">※ESC専用サイトの卸価格を入力</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">顧客への提示売価（税抜）</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">¥</span>
+                                        <input type="number" class="form-control" id="sellingPrice" placeholder="販売価格" required oninput="calcPrices()">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">専売店 粗利見込（1台あたり）</label>
+                                    <div class="form-control bg-white text-success fw-bold" id="profitDisplay">¥0 (0.0%)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 搬入環境・リサイクル -->
+                        <div class="bg-light p-3 rounded mb-3 border">
+                            <h6 class="fw-bold text-secondary mb-2">④ 搬入環境・リサイクル回収情報（EDION FAX必須事項）</h6>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">設置階数・住居形態</label>
+                                    <input type="text" class="form-control" id="floorInfo" placeholder="例: 戸建て1階 / マンション4階">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">エレベーター</label>
+                                    <select class="form-select" id="elevatorInfo">
+                                        <option value="あり">あり</option>
+                                        <option value="なし（階段搬入）">なし（階段搬入）</option>
+                                        <option value="戸建1階のため不要">戸建1階のため不要</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">リサイクル回収</label>
+                                    <select class="form-select" id="recycleSelect">
+                                        <option value="なし">なし</option>
+                                        <option value="テレビ引き取り希望（現場現金精算）">テレビ引き取り希望（現場現金精算）</option>
+                                        <option value="冷蔵庫引き取り希望（現場現金精算）">冷蔵庫引き取り希望（現場現金精算）</option>
+                                        <option value="洗濯機引き取り希望（現場現金精算）">洗濯機引き取り希望（現場現金精算）</option>
+                                        <option value="エアコン引き取り希望（現場現金精算）">エアコン引き取り希望（現場現金精算）</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">決済区分</label>
+                                    <input type="text" class="form-control bg-light" value="EDION B to B Card (翌月27日)" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="bi bi-check-circle me-1"></i>受注を登録して発注書を生成
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 2. 受注一覧（中日新聞社 管理者専用） -->
+            <div class="tab-pane fade admin-only" id="list-pane" role="tabpanel">
+                <div class="card card-custom p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-primary mb-0"><i class="bi bi-list-check me-2"></i>登録済 受注・発注書一覧（本部集約）</h5>
+                        <button class="btn btn-outline-success btn-sm" onclick="exportOrdersCSV()">
+                            <i class="bi bi-file-earmark-excel me-1"></i>全店注文データをCSV出力
                         </button>
                     </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- 2. 受注一覧・FAX印刷タブ -->
-        <div class="tab-pane fade" id="list-pane" role="tabpanel">
-            <div class="card card-custom p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-primary mb-0"><i class="bi bi-list-check me-2"></i>登録済 受注・発注書一覧</h5>
-                    <button class="btn btn-outline-success btn-sm" onclick="exportOrdersCSV()">
-                        <i class="bi bi-file-earmark-excel me-1"></i>注文データをCSVダウンロード
-                    </button>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light small">
-                            <tr>
-                                <th>発注番号</th>
-                                <th>発注専売店</th>
-                                <th>顧客名</th>
-                                <th>商品名 / 型番</th>
-                                <th>卸価格(税抜)</th>
-                                <th>販売価格(税抜)</th>
-                                <th>粗利(専売店利益)</th>
-                                <th>ステータス</th>
-                                <th class="text-center">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ordersTableBody">
-                            <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">登録された受注データはまだありません。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. 専売店マスタタブ -->
-        <div class="tab-pane fade" id="shops-pane" role="tabpanel">
-            <div class="card card-custom p-4">
-                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-search me-2"></i>中日新聞専売店マスタ（1,163店舗）</h5>
-                <div class="row g-2 mb-3">
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" id="masterSearchKeyword" placeholder="店舗名・店舗コード・電話番号で検索..." oninput="searchMasterShops()">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light small">
+                                <tr>
+                                    <th>発注番号</th>
+                                    <th>発注専売店</th>
+                                    <th>顧客名</th>
+                                    <th>商品名 / 型番</th>
+                                    <th>卸価格(税抜)</th>
+                                    <th>販売価格(税抜)</th>
+                                    <th>粗利(専売店利益)</th>
+                                    <th>ステータス</th>
+                                    <th class="text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody"></tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                    <table class="table table-striped table-sm small">
-                        <thead class="table-dark sticky-top">
-                            <tr>
-                                <th>店舗コード</th>
-                                <th>専売店名</th>
-                                <th>県</th>
-                                <th>地区</th>
-                                <th>支部</th>
-                                <th>班</th>
-                                <th>電話番号</th>
-                            </tr>
-                        </thead>
-                        <tbody id="masterShopTableBody"></tbody>
-                    </table>
-                </div>
             </div>
-        </div>
 
-        <!-- 4. 相殺集計タブ -->
-        <div class="tab-pane fade" id="summary-pane" role="tabpanel">
-            <div class="card card-custom p-4">
-                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-calculator me-2"></i>月次 新聞代相殺集計シミュレーション</h5>
-                <p class="text-muted small">専売店ごとの家電卸代金・粗利を集計し、月次の新聞代請求と相殺する仕組の集計プレビューです。</p>
-                <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <div class="p-3 bg-light border rounded">
-                            <div class="small text-muted">総受注件数</div>
-                            <h3 class="fw-bold text-dark mb-0" id="statTotalCount">0 件</h3>
+            <!-- 3. 専売店マスタ（中日新聞社 管理者専用） -->
+            <div class="tab-pane fade admin-only" id="shops-pane" role="tabpanel">
+                <div class="card card-custom p-4">
+                    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-shop me-2"></i>専売店マスタ管理（2店舗）</h5>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" id="masterSearchKeyword" placeholder="店舗名・店舗コード・電話番号で検索..." oninput="searchMasterShops()">
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="p-3 bg-light border rounded">
-                            <div class="small text-muted">EDION卸代金 合計（カード決済対象）</div>
-                            <h3 class="fw-bold text-primary mb-0" id="statTotalWholesale">¥0</h3>
-                        </div>
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-striped table-sm small">
+                            <thead class="table-dark sticky-top">
+                                <tr>
+                                    <th>店舗コード</th>
+                                    <th>専売店名</th>
+                                    <th>県</th>
+                                    <th>地区</th>
+                                    <th>支部</th>
+                                    <th>班</th>
+                                    <th>電話番号</th>
+                                </tr>
+                            </thead>
+                            <tbody id="masterShopTableBody"></tbody>
+                        </table>
                     </div>
-                    <div class="col-md-4">
-                        <div class="p-3 bg-light border rounded">
-                            <div class="small text-muted">専売店 創出粗利 合計</div>
-                            <h3 class="fw-bold text-success mb-0" id="statTotalProfit">¥0</h3>
+                </div>
+            </div>
+
+            <!-- 4. 相殺集計（中日新聞社 管理者専用） -->
+            <div class="tab-pane fade admin-only" id="summary-pane" role="tabpanel">
+                <div class="card card-custom p-4">
+                    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-calculator me-2"></i>月次 新聞代相殺集計シミュレーション</h5>
+                    <p class="text-muted small">全専売店から上がった家電売上・卸金額を集計し、月次の新聞代請求データと相殺する管理プレビューです。</p>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light border rounded">
+                                <div class="small text-muted">総受注件数</div>
+                                <h3 class="fw-bold text-dark mb-0" id="statTotalCount">0 件</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light border rounded">
+                                <div class="small text-muted">EDION卸代金 合計（カード決済対象）</div>
+                                <h3 class="fw-bold text-primary mb-0" id="statTotalWholesale">¥0</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light border rounded">
+                                <div class="small text-muted">専売店 創出粗利 合計</div>
+                                <h3 class="fw-bold text-success mb-0" id="statTotalProfit">¥0</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
+        </div>
     </div>
 </div>
 
 <!-- ================= FAX印刷用プレビューエリア (A4レイアウト) ================= -->
 <div id="printArea" style="display: none;">
     <div class="fax-sheet">
-        <!-- 送信先ヘッダー -->
         <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
             <div>
                 <h4 class="fw-bold mb-0">ESC商品発注書（兼 配送・工事依頼票）</h4>
@@ -398,7 +452,6 @@
             </div>
         </div>
 
-        <!-- 発信元・印鑑枠 -->
         <table class="fax-header-table mb-3">
             <tr>
                 <td style="width: 60%;">
@@ -417,7 +470,6 @@
             </tr>
         </table>
 
-        <!-- お届け先情報 -->
         <div class="fw-bold small mb-1">【お届け先・お客様（エンドユーザー）情報】</div>
         <table class="fax-body-table mb-3">
             <tr>
@@ -438,7 +490,6 @@
             </tr>
         </table>
 
-        <!-- 発注商品明細 -->
         <div class="fw-bold small mb-1">【発注商品明細】</div>
         <table class="fax-body-table mb-3 text-center">
             <thead style="background: #eee;">
@@ -465,7 +516,6 @@
             </tbody>
         </table>
 
-        <!-- リサイクル・特記事項 -->
         <table class="fax-body-table mb-2">
             <tr>
                 <th style="width: 20%; background: #eee;">家電リサイクル回収</th>
@@ -491,18 +541,97 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const SHOPS = [{"code": "", "name": "内山", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "天満", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "萱場", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "東山", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "汁谷", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "自由ケ丘", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "星ヶ丘", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "今池", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "丸山", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "古井坂", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "覚王山", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "平和が丘", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "藤が丘", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "猪子石台", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "本郷", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "千種高校前", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "上社", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "高針", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "虹ケ丘", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "上社南", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "極楽", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "猪子石", "pref": "愛知県", "district": "名古屋", "branch": "千種名東支部", "group": "", "tel": ""}, {"code": "", "name": "円上", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "(桜山)", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "滝子", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "御器所", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "川名", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "川原通り", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "山手通り", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "高田", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "井戸田", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "瑞穂", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "昭和高校前", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "汐路", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "石川橋", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "中根", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "弥富", "pref": "愛知県", "district": "名古屋", "branch": "昭和・瑞穂支部", "group": "", "tel": ""}, {"code": "", "name": "星崎", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "鳴尾", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "笠寺", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "さくら", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "呼続", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "大磯", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "桜田", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "柴田", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "明治", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "ゆたか", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "豊田", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "南陽通", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "大江", "pref": "愛知県", "district": "名古屋", "branch": "南支部", "group": "", "tel": ""}, {"code": "", "name": "熱田", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "船方", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "日比野", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "沢上", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "千年", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "名港", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "東海橋", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "六番町", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "小碓", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "稲永", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "大手", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "惟信", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "港西", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "明徳", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "当知", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "南陽", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "南陽西部", "pref": "愛知県", "district": "名古屋", "branch": "熱田・港支部", "group": "", "tel": ""}, {"code": "", "name": "五女子", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "八幡", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "太平", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "常磐", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "荒子", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "野田", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "昭和橋", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "篠原", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "中郷", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "東起", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "正色", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "高杉", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "万場", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "とみた吉津", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "千音寺", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "春田", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "戸田", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "豊治", "pref": "愛知県", "district": "名古屋", "branch": "中川支部", "group": "", "tel": ""}, {"code": "", "name": "大曽根", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "赤塚", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "大幸", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "明倫", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "矢田", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "葵", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "布池", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "高岳", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "名駅", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "新栄", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "中部", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "久屋大通", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "瓦町", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "上前津", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "金山", "pref": "愛知県", "district": "名古屋", "branch": "東中支部", "group": "", "tel": ""}, {"code": "", "name": "駅前", "pref": "愛知県", "district": "名古屋", "branch": "中村支部", "group": "", "tel": ""}, {"code": "", "name": "大鳥居", "pref": "愛知県", "district": "名古屋", "branch": "中村支部", "group": "", "tel": ""}, {"code": "", "name": "日比津", "pref": "愛知県", "district": "名古屋", "branch": "中村支部", "group": "", "tel": ""}, {"code": "", "name": "諏訪", "pref": "愛知県", "district": "名古屋", "branch": "中村支部", "group": "", "tel": ""}, {"code": "", "name": "黄金", "pref": "愛知県", "district": "名古屋", "branch": "中村支部", "group": "", "tel": ""}, {"code": "", "name": "太閤", "pref": "愛知県", "district": "名古屋", "branch": "中村支部", "group": "", "tel": ""}, {"code": "", "name": "稲葉地", "pref": "愛知県", "district": "名古屋", "branch": "中村支部", "group": "", "tel": ""}, {"code": "", "name": "豊国通", "pref": "愛知県", "district": "名古屋", "branch": "中村支部", "group": "", "tel": ""}, {"code": "", "name": "烏森", "pref": "愛知県", "district": "名古屋", "branch": "中村支部", "group": "", "tel": ""}, {"code": "", "name": "東枇杷島", "pref": "愛知県", "district": "名古屋", "branch": "西支部", "group": "", "tel": ""}, {"code": "", "name": "名西", "pref": "愛知県", "district": "名古屋", "branch": "西支部", "group": "", "tel": ""}, {"code": "", "name": "浄心", "pref": "愛知県", "district": "名古屋", "branch": "西支部", "group": "", "tel": ""}, {"code": "", "name": "榎", "pref": "愛知県", "district": "名古屋", "branch": "西支部", "group": "", "tel": ""}, {"code": "", "name": "庄内通", "pref": "愛知県", "district": "名古屋", "branch": "西支部", "group": "", "tel": ""}, {"code": "", "name": "上名古屋", "pref": "愛知県", "district": "名古屋", "branch": "西支部", "group": "", "tel": ""}, {"code": "", "name": "又穂", "pref": "愛知県", "district": "名古屋", "branch": "西支部", "group": "", "tel": ""}, {"code": "", "name": "浅間町", "pref": "愛知県", "district": "名古屋", "branch": "西支部", "group": "", "tel": ""}, {"code": "", "name": "中小田井", "pref": "愛知県", "district": "名古屋", "branch": "西支部", "group": "", "tel": ""}, {"code": "", "name": "大野木", "pref": "愛知県", "district": "名古屋", "branch": "西支部", "group": "", "tel": ""}, {"code": "", "name": "比良", "pref": "愛知県", "district": "名古屋", "branch": "西支部", "group": "", "tel": ""}, {"code": "", "name": "山田", "pref": "愛知県", "district": "名古屋", "branch": "西支部", "group": "", "tel": ""}, {"code": "", "name": "光城", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "城見通", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "柳原・主税町", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "お福", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "志賀", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "東志賀", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "杉村", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "上飯田", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "金城", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "若葉通", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "飯田", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "如意", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "味鋺", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "喜惣治", "pref": "愛知県", "district": "名古屋", "branch": "北支部", "group": "", "tel": ""}, {"code": "", "name": "森孝", "pref": "愛知県", "district": "名古屋", "branch": "守山支部", "group": "", "tel": ""}, {"code": "", "name": "大森", "pref": "愛知県", "district": "名古屋", "branch": "守山支部", "group": "", "tel": ""}, {"code": "", "name": "小幡", "pref": "愛知県", "district": "名古屋", "branch": "守山支部", "group": "", "tel": ""}, {"code": "", "name": "志段味", "pref": "愛知県", "district": "名古屋", "branch": "守山支部", "group": "", "tel": ""}, {"code": "", "name": "志段味　西部", "pref": "愛知県", "district": "名古屋", "branch": "守山支部", "group": "", "tel": ""}, {"code": "", "name": "喜多山", "pref": "愛知県", "district": "名古屋", "branch": "守山支部", "group": "", "tel": ""}, {"code": "", "name": "守山　南部", "pref": "愛知県", "district": "名古屋", "branch": "守山支部", "group": "", "tel": ""}, {"code": "", "name": "新守山", "pref": "愛知県", "district": "名古屋", "branch": "守山支部", "group": "", "tel": ""}, {"code": "", "name": "瀬古", "pref": "愛知県", "district": "名古屋", "branch": "守山支部", "group": "", "tel": ""}, {"code": "", "name": "植田", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "植田北部", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "平針", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "平針住宅", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "八事", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "梅が丘", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "野並", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "一ツ山", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "黒石", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "鳴子", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "みどり台", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "みどり桃山", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "みどり徳重", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "神ノ倉", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "神ノ倉　東部", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "なるみ砦", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "滝の水", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "平手", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "左京山", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "鳴海　大清水", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "鳴海住宅", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "競馬場前", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "大高", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "大高南", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "有松", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "有松　南", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "桶狭間", "pref": "愛知県", "district": "名古屋", "branch": "緑天白支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　南部", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　北部", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　浅井", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "浅井　北部", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　東部", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　千秋", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　瀬時", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　春明", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　西部", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "大和　三条", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "今伊勢　西", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　苅安賀", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "戸塚西御堂", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "尾張萩原", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　起", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　尾西", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "今伊勢　南部", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "木曽川　宇佐見", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "木曽川　大塚", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "玉ノ井奥町", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　大毛", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "今伊勢　北部", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "一宮　北方", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "", "tel": ""}, {"code": "", "name": "清須北部", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "あま清洲", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "枇杷島", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "尾張新川　南部", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "尾張新川　北部", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "西枇杷島", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "稲沢　下津", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "稲沢　国府宮", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "稲沢　大里", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "下津　北部", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "稲沢　松清", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "稲沢　南部", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "祖父江", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "祖父江　南部", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "平和", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "稲沢　西部", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "稲沢　高御堂", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "稲沢　千代田", "pref": "愛知県", "district": "尾張", "branch": "稲沢支部", "group": "", "tel": ""}, {"code": "", "name": "津島　西部", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "津島", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "神守", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "尾張弥富", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "弥富中央", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "木曽岬", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "弥富駅前", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "勝幡", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "藤浪", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "津島　北部", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "佐屋", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "南佐屋", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "永和", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "蟹江　須成", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "蟹江　中部", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "大治　東部", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "大治　南部", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "大治　西部", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "万場北", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "飛島", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "美和正則", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "七宝", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "木田", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "甚目寺", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "甚目寺　南部", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "甚目寺　西部", "pref": "愛知県", "district": "尾張", "branch": "津島支部", "group": "", "tel": ""}, {"code": "", "name": "犬山", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "犬山　駅東", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "羽黒", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "羽黒　東部", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "楽田", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "楽田　東部", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "犬山　東部", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "(犬山　城東)", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "古知野", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "江南　中部", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "江南　草井", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "布袋", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "加納馬場", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "古知野　東部", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "江南まんだら寺前", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "布袋　北部", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "江南　北部", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "扶桑", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "扶桑　山名", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "柏森", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "扶桑　東", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "大口　北部", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "大口　南部", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "岩倉", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "岩倉　南部", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "岩倉　東部", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "北名古屋", "pref": "愛知県", "district": "尾張", "branch": "犬山支部", "group": "", "tel": ""}, {"code": "", "name": "味岡", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "小牧　北部", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "小牧　村中", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "小牧　陶", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "池の内", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "小牧　本庄", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "桃花台　西", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "桃花台　東", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "小牧　東部", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "小牧　三ツ渕", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "豊山北", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "豊場", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "小牧　中央", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "北里", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "小牧　南部", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "小木", "pref": "愛知県", "district": "尾張", "branch": "小牧支部", "group": "", "tel": ""}, {"code": "", "name": "岩成台", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "藤山台", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "高森台", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "石尾台", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "高蔵寺", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "尾張坂下", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "大泉寺", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "春日井", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "上条", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "鳥居松", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "春日井　八田", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "出川", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "春日井高校前", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "鷹来桃山", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "松河戸", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "勝川", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "勝川　東部", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "春日井　西部", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "勝川　南部", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "春日井　宮町", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "春日井　中新町", "pref": "愛知県", "district": "尾張", "branch": "春日井支部", "group": "", "tel": ""}, {"code": "", "name": "瀬戸　南部", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "瀬戸　山口", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "原山台", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "瀬戸　菱野", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "瀬戸　加藤", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "瀬戸東", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "品野", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "幡山", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "瀬戸　陶原", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "瀬戸　長根", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "新瀬戸", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "瀬戸　南山", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "中水野", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "水野　西", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "瑞鳳", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "旭新居", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "平池", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "本地ケ原", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "三郷", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "長久手　北部", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "長久手　東部", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "長久手　南部", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "長久手　西部", "pref": "愛知県", "district": "尾張", "branch": "瀬戸支部", "group": "", "tel": ""}, {"code": "", "name": "豊明団地", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "豊明　南館", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "前後", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "桜ケ丘", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "豊明　東部", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "沓掛", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "和合", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "東郷白鳥", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "諸輪", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "音貝", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "岩崎", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "岩崎　香久山", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "岩崎台", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "五色園", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "日進米野木", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "日進　中部", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "赤池", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "日進　折戸", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "日進　浅田", "pref": "愛知県", "district": "尾張", "branch": "愛豊支部", "group": "", "tel": ""}, {"code": "", "name": "大府", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "大府　駅西", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "大府　森岡", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "大府　吉田", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "共和", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "共和　西", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "尾張横須賀", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "加木屋", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "荒尾", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "富木島", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "名和　水谷", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "大田", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "高横須賀", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "緒川", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "藤江", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "石浜", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "東ケ丘", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "緒川　新田", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "巽ケ丘", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "知多粕谷", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "新舞子", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "岡田", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "朝倉団地", "pref": "愛知県", "district": "尾張", "branch": "知多北支部", "group": "", "tel": ""}, {"code": "", "name": "阿久比", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "坂部", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "半田　住吉", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "半田　衣浦", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "乙川", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "半田　北部", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "亀崎", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "知多半田", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "半田　清城", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "半田　中町", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "半田　板山", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "半田　青山", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "岩滑", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "成岩", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "常滑", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "セントレア", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "尾張　大野", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "常滑鬼崎", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "武豊", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "富貴", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "常滑　南部", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "河和", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "師崎", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "豊浜", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "内海", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "野間", "pref": "愛知県", "district": "尾張", "branch": "知多南支部", "group": "", "tel": ""}, {"code": "", "name": "光ヶ丘", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "竜美ケ丘", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　大平", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　石垣", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　東部", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　真伝", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　常磐", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岩津", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "羽根", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　上地台", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　針崎", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "土呂", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　戸崎", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　南部", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　北部", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　大門", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　西部", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "矢作", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "岡崎　上和田", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "六ツ美", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "六ツ美　北", "pref": "愛知県", "district": "三河", "branch": "岡崎支部", "group": "", "tel": ""}, {"code": "", "name": "富士松", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "刈谷　愛教大前", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "東刈谷", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "刈谷　南部", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "刈谷　北部", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "刈谷　恩田", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "小垣江", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "知立　前島", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "知立　南部", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "知立　谷田", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "知立　西部", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "知立　南陽", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "知立　東部", "pref": "愛知県", "district": "三河", "branch": "刈谷・知立支部", "group": "", "tel": ""}, {"code": "", "name": "南安城", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "安城　南部", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "安城　伊藤", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "二本木", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "安祥公園前", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "安城　今池町", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "今村", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "安城　北部", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "石橋団地", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "三河安城", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "安城　明祥", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "安城　西部", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "半城土・高棚", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "安城　桜井", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "南桜井", "pref": "愛知県", "district": "三河", "branch": "安城支部", "group": "", "tel": ""}, {"code": "", "name": "挙母　東部", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "上挙母", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "豊田　東山", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "豊田　市木", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "挙母　中央", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "三好ヶ丘", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "三好", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "三好　莇生", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "挙母　小清水", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "挙母　栄町", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "豊田　駅西", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "三河高岡", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "豊田　美山", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "土橋", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "若林", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "浄水四郷", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "豊田　乙部ヶ丘", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "平戸橋", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "西中金", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "保見", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "藤岡", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "藤岡　北", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "竹村", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "上郷", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "豊田　柘植", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "豊田　大林", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "上郷　北部", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "上郷　畝部", "pref": "愛知県", "district": "三河", "branch": "豊田支部", "group": "", "tel": ""}, {"code": "", "name": "吉浜", "pref": "愛知県", "district": "三河", "branch": "碧南支部", "group": "", "tel": ""}, {"code": "", "name": "吉浜　南部", "pref": "愛知県", "district": "三河", "branch": "碧南支部", "group": "", "tel": ""}, {"code": "", "name": "高浜", "pref": "愛知県", "district": "三河", "branch": "碧南支部", "group": "", "tel": ""}, {"code": "", "name": "碧南　新川", "pref": "愛知県", "district": "三河", "branch": "碧南支部", "group": "", "tel": ""}, {"code": "", "name": "鷲塚", "pref": "愛知県", "district": "三河", "branch": "碧南支部", "group": "", "tel": ""}, {"code": "", "name": "棚尾", "pref": "愛知県", "district": "三河", "branch": "碧南支部", "group": "", "tel": ""}, {"code": "", "name": "碧南　西端", "pref": "愛知県", "district": "三河", "branch": "碧南支部", "group": "", "tel": ""}, {"code": "", "name": "大浜", "pref": "愛知県", "district": "三河", "branch": "碧南支部", "group": "", "tel": ""}, {"code": "", "name": "大浜　南", "pref": "愛知県", "district": "三河", "branch": "碧南支部", "group": "", "tel": ""}, {"code": "", "name": "西尾", "pref": "愛知県", "district": "三河", "branch": "西尾支部", "group": "", "tel": ""}, {"code": "", "name": "米津", "pref": "愛知県", "district": "三河", "branch": "西尾支部", "group": "", "tel": ""}, {"code": "", "name": "平坂", "pref": "愛知県", "district": "三河", "branch": "西尾支部", "group": "", "tel": ""}, {"code": "", "name": "三河一色", "pref": "愛知県", "district": "三河", "branch": "西尾支部", "group": "", "tel": ""}, {"code": "", "name": "三江島", "pref": "愛知県", "district": "三河", "branch": "西尾支部", "group": "", "tel": ""}, {"code": "", "name": "上横須賀", "pref": "愛知県", "district": "三河", "branch": "西尾支部", "group": "", "tel": ""}, {"code": "", "name": "吉良吉田", "pref": "愛知県", "district": "三河", "branch": "西尾支部", "group": "", "tel": ""}, {"code": "", "name": "吉良白浜", "pref": "愛知県", "district": "三河", "branch": "西尾支部", "group": "", "tel": ""}, {"code": "", "name": "西幡豆", "pref": "愛知県", "district": "三河", "branch": "西尾支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　南部", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　南栄", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　北部", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　西部", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　吉田方", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　花田", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　牛川", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　大村", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　磯辺", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　玉川", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　佐久間", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　上地", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　飯村", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　向山", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　東岩田", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　佐藤町", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　鷹丘", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　北山", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　向ヶ丘", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　栄", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　上野", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　二川南", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "老津", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　曙", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "豊橋　野依", "pref": "愛知県", "district": "三河", "branch": "豊橋支部", "group": "", "tel": ""}, {"code": "", "name": "牛久保中部大万", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "豊川　八南", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "御油", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "豊川　音羽", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "牛久保　中村", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "国府", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "牛久保　大万", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "豊川　諏訪", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "豊川　蔵子", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "豊川", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "豊川　中条", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "三河一宮", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "新城　西", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "新城　東", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "蒲郡", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "蒲郡　西", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "御津　鈴木", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "御津　小林", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "小坂井　駅前", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "西小坂井", "pref": "愛知県", "district": "三河", "branch": "豊川・蒲郡支部", "group": "", "tel": ""}, {"code": "", "name": "小渡小原", "pref": "愛知県", "district": "三河", "branch": "西三河合売", "group": "", "tel": ""}, {"code": "", "name": "足助", "pref": "愛知県", "district": "三河", "branch": "西三河合売", "group": "", "tel": ""}, {"code": "", "name": "本宿", "pref": "愛知県", "district": "三河", "branch": "西三河合売", "group": "", "tel": ""}, {"code": "", "name": "美合　南部", "pref": "愛知県", "district": "三河", "branch": "西三河合売", "group": "", "tel": ""}, {"code": "", "name": "美合　北部", "pref": "愛知県", "district": "三河", "branch": "西三河合売", "group": "", "tel": ""}, {"code": "", "name": "河合", "pref": "愛知県", "district": "三河", "branch": "西三河合売", "group": "", "tel": ""}, {"code": "", "name": "豊富", "pref": "愛知県", "district": "三河", "branch": "西三河合売", "group": "", "tel": ""}, {"code": "", "name": "宮崎", "pref": "愛知県", "district": "三河", "branch": "西三河合売", "group": "", "tel": ""}, {"code": "", "name": "豊田　下山", "pref": "愛知県", "district": "三河", "branch": "西三河合売", "group": "", "tel": ""}, {"code": "", "name": "九久平", "pref": "愛知県", "district": "三河", "branch": "西三河合売", "group": "", "tel": ""}, {"code": "", "name": "幸田", "pref": "愛知県", "district": "三河", "branch": "西三河合売", "group": "", "tel": ""}, {"code": "", "name": "稲武", "pref": "愛知県", "district": "三河", "branch": "西三河合売", "group": "", "tel": ""}, {"code": "", "name": "作手", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "長篠", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "大海", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "海老", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "三河　田口", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "津具", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "名倉", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "三河大野", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "三河川合", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "三河本郷", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "豊根", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "富山", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "田原", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "赤羽根", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "泉", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "福江", "pref": "愛知県", "district": "三河", "branch": "東三河合売", "group": "", "tel": ""}, {"code": "", "name": "桑名　東部", "pref": "三重県", "district": "三重", "branch": "桑員支部", "group": "", "tel": ""}, {"code": "", "name": "桑名　南部", "pref": "三重県", "district": "三重", "branch": "桑員支部", "group": "", "tel": ""}, {"code": "", "name": "桑名　正和", "pref": "三重県", "district": "三重", "branch": "桑員支部", "group": "", "tel": ""}, {"code": "", "name": "桑名　久米", "pref": "三重県", "district": "三重", "branch": "桑員支部", "group": "", "tel": ""}, {"code": "", "name": "桑名　中央", "pref": "三重県", "district": "三重", "branch": "桑員支部", "group": "", "tel": ""}, {"code": "", "name": "大山田団地", "pref": "三重県", "district": "三重", "branch": "桑員支部", "group": "", "tel": ""}, {"code": "", "name": "蓮花寺", "pref": "三重県", "district": "三重", "branch": "桑員支部", "group": "", "tel": ""}, {"code": "", "name": "西桑名ネオポリス", "pref": "三重県", "district": "三重", "branch": "桑員支部", "group": "", "tel": ""}, {"code": "", "name": "多度", "pref": "三重県", "district": "三重", "branch": "桑員支部", "group": "", "tel": ""}, {"code": "", "name": "阿下喜", "pref": "三重県", "district": "三重", "branch": "桑員支部", "group": "", "tel": ""}, {"code": "", "name": "藤原", "pref": "三重県", "district": "三重", "branch": "桑員支部", "group": "", "tel": ""}, {"code": "", "name": "治田", "pref": "三重県", "district": "三重", "branch": "桑員支部", "group": "", "tel": ""}, {"code": "", "name": "富田　生川", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "川越　南", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "川越　北", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "伊勢朝日", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "四日市あかつき", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "四日市あがた", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "四日市　保々", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "鵜川原", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "阿倉川", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "四日市橋北", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "生桑", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "四日市　中央", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "四日市　常磐", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "四日市　羽津", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "四日市　南部", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "四日市　西部", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "笹川", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "四日市　波木", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "塩浜", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "内部", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "楠", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "三重平", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "桜", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "川島", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "菰野", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "菰野　朝上", "pref": "三重県", "district": "三重", "branch": "三四支部", "group": "", "tel": ""}, {"code": "", "name": "長太の浦", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "若松", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "いせ神戸　北部", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "いせ神戸　南部", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "鈴鹿　桜島", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "平田", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "白子", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "磯山", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "加佐登", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "鈴峰", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "亀山　北部", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "亀山　中央", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "亀山　南部", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "亀山　関", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "鈴鹿国府", "pref": "三重県", "district": "三重", "branch": "鈴亀支部", "group": "", "tel": ""}, {"code": "", "name": "津　大光堂", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "津　西が丘", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "津　橋南", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "津　南が丘", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "津　片田東", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "津　片田西", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "安濃", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "津　新町", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "津　橋北", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "一身田", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "津　高野尾", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "白塚", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "高茶屋", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "津　雲出", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "久居", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "久居　東部", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "久居　南部", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "久居　西部", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "津　一志", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "白山", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "豊津上野", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "千里ヶ丘", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "伊勢竹原", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "家城", "pref": "三重県", "district": "三重", "branch": "津支部", "group": "", "tel": ""}, {"code": "", "name": "六軒", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "伊勢中川", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "松阪　中央", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "櫛田", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "松阪　川井町", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "松阪　鎌田", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "松阪　大平", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "松阪まえのへた", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "松阪　桜町", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "松阪　大黒田", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "松阪　徳和", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "柿野", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "相可", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "飯高", "pref": "三重県", "district": "三重", "branch": "松阪支部", "group": "", "tel": ""}, {"code": "", "name": "伊勢市　駅前", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "伊勢市　厚生", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "伊勢市　西部", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "伊勢市　南部", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "伊勢市　中央", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "伊勢市　北部", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "大淀", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "田丸", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "小俣", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "明和", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "鳥羽", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "伊勢市　東部", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "鵜方", "pref": "三重県", "district": "三重", "branch": "伊志支部", "group": "", "tel": ""}, {"code": "", "name": "紀伊長島", "pref": "三重県", "district": "三重", "branch": "牟婁支部", "group": "", "tel": ""}, {"code": "", "name": "相賀", "pref": "三重県", "district": "三重", "branch": "牟婁支部", "group": "", "tel": ""}, {"code": "", "name": "引本", "pref": "三重県", "district": "三重", "branch": "牟婁支部", "group": "", "tel": ""}, {"code": "", "name": "尾鷲", "pref": "三重県", "district": "三重", "branch": "牟婁支部", "group": "", "tel": ""}, {"code": "", "name": "九鬼", "pref": "三重県", "district": "三重", "branch": "牟婁支部", "group": "", "tel": ""}, {"code": "", "name": "三木里", "pref": "三重県", "district": "三重", "branch": "牟婁支部", "group": "", "tel": ""}, {"code": "", "name": "賀田", "pref": "三重県", "district": "三重", "branch": "牟婁支部", "group": "", "tel": ""}, {"code": "", "name": "熊野", "pref": "三重県", "district": "三重", "branch": "紀州支部", "group": "", "tel": ""}, {"code": "", "name": "御浜", "pref": "三重県", "district": "三重", "branch": "紀州支部", "group": "", "tel": ""}, {"code": "", "name": "新宮", "pref": "三重県", "district": "三重", "branch": "紀州支部", "group": "", "tel": ""}, {"code": "", "name": "伊賀　上野", "pref": "三重県", "district": "三重", "branch": "伊賀支部", "group": "", "tel": ""}, {"code": "", "name": "上野　北部", "pref": "三重県", "district": "三重", "branch": "伊賀支部", "group": "", "tel": ""}, {"code": "", "name": "美旗", "pref": "三重県", "district": "三重", "branch": "伊賀支部", "group": "", "tel": ""}, {"code": "", "name": "名張", "pref": "三重県", "district": "三重", "branch": "伊賀支部", "group": "", "tel": ""}, {"code": "", "name": "名張　東部", "pref": "三重県", "district": "三重", "branch": "伊賀支部", "group": "", "tel": ""}, {"code": "", "name": "新堂", "pref": "三重県", "district": "三重", "branch": "伊賀支部", "group": "", "tel": ""}, {"code": "", "name": "諏訪　丸柱", "pref": "三重県", "district": "三重", "branch": "伊賀支部", "group": "", "tel": ""}, {"code": "", "name": "桑名　長島", "pref": "三重県", "district": "三重", "branch": "桑員合売", "group": "", "tel": ""}, {"code": "", "name": "深谷", "pref": "三重県", "district": "三重", "branch": "桑員合売", "group": "", "tel": ""}, {"code": "", "name": "員弁", "pref": "三重県", "district": "三重", "branch": "桑員合売", "group": "", "tel": ""}, {"code": "", "name": "石榑", "pref": "三重県", "district": "三重", "branch": "桑員合売", "group": "", "tel": ""}, {"code": "", "name": "梅戸井", "pref": "三重県", "district": "三重", "branch": "桑員合売", "group": "", "tel": ""}, {"code": "", "name": "加太", "pref": "三重県", "district": "三重", "branch": "鈴亀合売", "group": "", "tel": ""}, {"code": "", "name": "下ノ庄", "pref": "三重県", "district": "三重", "branch": "鈴亀合売", "group": "", "tel": ""}, {"code": "", "name": "北神山", "pref": "三重県", "district": "三重", "branch": "津　合売", "group": "", "tel": ""}, {"code": "", "name": "椋本", "pref": "三重県", "district": "三重", "branch": "津　合売", "group": "", "tel": ""}, {"code": "", "name": "榊原", "pref": "三重県", "district": "三重", "branch": "津　合売", "group": "", "tel": ""}, {"code": "", "name": "八知", "pref": "三重県", "district": "三重", "branch": "津　合売", "group": "", "tel": ""}, {"code": "", "name": "奥津", "pref": "三重県", "district": "三重", "branch": "津　合売", "group": "", "tel": ""}, {"code": "", "name": "片野橋", "pref": "三重県", "district": "三重", "branch": "松阪合売", "group": "", "tel": ""}, {"code": "", "name": "栃原", "pref": "三重県", "district": "三重", "branch": "松阪合売", "group": "", "tel": ""}, {"code": "", "name": "三瀬谷", "pref": "三重県", "district": "三重", "branch": "松阪合売", "group": "", "tel": ""}, {"code": "", "name": "大台宮川", "pref": "三重県", "district": "三重", "branch": "松阪合売", "group": "", "tel": ""}, {"code": "", "name": "滝原", "pref": "三重県", "district": "三重", "branch": "松阪合売", "group": "", "tel": ""}, {"code": "", "name": "柏崎", "pref": "三重県", "district": "三重", "branch": "松阪合売", "group": "", "tel": ""}, {"code": "", "name": "大内山", "pref": "三重県", "district": "三重", "branch": "松阪合売", "group": "", "tel": ""}, {"code": "", "name": "阿曽", "pref": "三重県", "district": "三重", "branch": "松阪合売", "group": "", "tel": ""}, {"code": "", "name": "わたらい", "pref": "三重県", "district": "三重", "branch": "伊志合売", "group": "", "tel": ""}, {"code": "", "name": "中島", "pref": "三重県", "district": "三重", "branch": "伊志合売", "group": "", "tel": ""}, {"code": "", "name": "贄", "pref": "三重県", "district": "三重", "branch": "伊志合売", "group": "", "tel": ""}, {"code": "", "name": "東宮", "pref": "三重県", "district": "三重", "branch": "伊志合売", "group": "", "tel": ""}, {"code": "", "name": "吉津", "pref": "三重県", "district": "三重", "branch": "伊志合売", "group": "", "tel": ""}, {"code": "", "name": "島津", "pref": "三重県", "district": "三重", "branch": "伊志合売", "group": "", "tel": ""}, {"code": "", "name": "磯部", "pref": "三重県", "district": "三重", "branch": "伊志合売", "group": "", "tel": ""}, {"code": "", "name": "南勢町　東", "pref": "三重県", "district": "三重", "branch": "伊志合売", "group": "", "tel": ""}, {"code": "", "name": "南勢町　西", "pref": "三重県", "district": "三重", "branch": "伊志合売", "group": "", "tel": ""}, {"code": "", "name": "浜島", "pref": "三重県", "district": "三重", "branch": "伊志合売", "group": "", "tel": ""}, {"code": "", "name": "和具", "pref": "三重県", "district": "三重", "branch": "伊志合売", "group": "", "tel": ""}, {"code": "", "name": "二木島", "pref": "三重県", "district": "三重", "branch": "牟婁合売", "group": "", "tel": ""}, {"code": "", "name": "柘植", "pref": "三重県", "district": "三重", "branch": "伊賀合売", "group": "", "tel": ""}, {"code": "", "name": "島ケ原", "pref": "三重県", "district": "三重", "branch": "伊賀合売", "group": "", "tel": ""}, {"code": "", "name": "伊賀山田", "pref": "三重県", "district": "三重", "branch": "伊賀合売", "group": "", "tel": ""}, {"code": "", "name": "依那古", "pref": "三重県", "district": "三重", "branch": "伊賀合売", "group": "", "tel": ""}, {"code": "", "name": "伊賀神戸", "pref": "三重県", "district": "三重", "branch": "伊賀合売", "group": "", "tel": ""}, {"code": "", "name": "青山町", "pref": "三重県", "district": "三重", "branch": "伊賀合売", "group": "", "tel": ""}, {"code": "", "name": "松本　中央", "pref": "中部圏", "district": "長野", "branch": "中北信専売", "group": "", "tel": ""}, {"code": "", "name": "松本　東部", "pref": "中部圏", "district": "長野", "branch": "中北信専売", "group": "", "tel": ""}, {"code": "", "name": "松本　西部", "pref": "中部圏", "district": "長野", "branch": "中北信専売", "group": "", "tel": ""}, {"code": "", "name": "松本空港", "pref": "中部圏", "district": "長野", "branch": "中北信専売", "group": "", "tel": ""}, {"code": "", "name": "塩尻", "pref": "中部圏", "district": "長野", "branch": "中北信専売", "group": "", "tel": ""}, {"code": "", "name": "洗馬", "pref": "中部圏", "district": "長野", "branch": "中北信専売", "group": "", "tel": ""}, {"code": "", "name": "明科", "pref": "中部圏", "district": "長野", "branch": "中北信専売", "group": "", "tel": ""}, {"code": "", "name": "平沢", "pref": "中部圏", "district": "長野", "branch": "木曾合売", "group": "", "tel": ""}, {"code": "", "name": "藪原", "pref": "中部圏", "district": "長野", "branch": "木曾合売", "group": "", "tel": ""}, {"code": "", "name": "宮ノ越", "pref": "中部圏", "district": "長野", "branch": "木曾合売", "group": "", "tel": ""}, {"code": "", "name": "木曽福島", "pref": "中部圏", "district": "長野", "branch": "木曾合売", "group": "", "tel": ""}, {"code": "", "name": "上松　垣外", "pref": "中部圏", "district": "長野", "branch": "木曾合売", "group": "", "tel": ""}, {"code": "", "name": "上松　塚本", "pref": "中部圏", "district": "長野", "branch": "木曾合売", "group": "", "tel": ""}, {"code": "", "name": "須原", "pref": "中部圏", "district": "長野", "branch": "木曾合売", "group": "", "tel": ""}, {"code": "", "name": "野尻", "pref": "中部圏", "district": "長野", "branch": "木曾合売", "group": "", "tel": ""}, {"code": "", "name": "南木曽", "pref": "中部圏", "district": "長野", "branch": "木曾合売", "group": "", "tel": ""}, {"code": "", "name": "大町", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "松川池田", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "穂高", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "豊科", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "一日市場", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "梓川", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "松本", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "笹賀", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "村井広丘", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "寿", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "麻績", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "坂井　宮下", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "坂北", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "西条", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "生坂", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "四賀", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "田沢", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "南小谷", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "白馬", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "波田", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "長野　中央", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "篠ノ井", "pref": "中部圏", "district": "長野", "branch": "中北信合売", "group": "", "tel": ""}, {"code": "", "name": "駒場", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "山本", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "伊賀良", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "鼎・松尾", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "飯田　中央", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "飯田　上郷", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "市田", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "伊那大島", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "上片桐", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "駒ヶ根", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "宮田", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "伊那　加藤", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "伊那　東部", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "高遠", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "南箕輪", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "箕輪", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "下諏訪", "pref": "中部圏", "district": "長野", "branch": "南信専売", "group": "", "tel": ""}, {"code": "", "name": "平岡", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "遠山", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "大下条", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "新野", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "南下条", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "泰阜", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "天竜峡", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "駄科", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "根羽", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "平谷", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "浪合", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "下條", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "伊豆木", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "喬木", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "座光寺", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "大鹿", "pref": "中部圏", "district": "長野", "branch": "下伊那合売", "group": "", "tel": ""}, {"code": "", "name": "川岸", "pref": "中部圏", "district": "長野", "branch": "上伊那合売", "group": "", "tel": ""}, {"code": "", "name": "岡谷", "pref": "中部圏", "district": "長野", "branch": "上伊那合売", "group": "", "tel": ""}, {"code": "", "name": "諏訪", "pref": "中部圏", "district": "長野", "branch": "上伊那合売", "group": "", "tel": ""}, {"code": "", "name": "茅野", "pref": "中部圏", "district": "長野", "branch": "上伊那合売", "group": "", "tel": ""}, {"code": "", "name": "駒ヶ根　東部", "pref": "中部圏", "district": "長野", "branch": "上伊那合売", "group": "", "tel": ""}, {"code": "", "name": "辰野　共和堂", "pref": "中部圏", "district": "長野", "branch": "上伊那合売", "group": "", "tel": ""}, {"code": "", "name": "小野", "pref": "中部圏", "district": "長野", "branch": "上伊那合売", "group": "", "tel": ""}, {"code": "", "name": "米原", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "醒ケ井", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "米原インター", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "長浜", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "長浜　東部", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "長浜　北", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "虎姫", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "湖北町", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "木之本", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "彦根　東部", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "彦根　南部", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "彦根　中央", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "鳥居本", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "彦根　西部", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "彦根　城陽", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "稲枝", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "多賀", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "豊郷", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "愛知川", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "八日市", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "近江八幡東", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "能登川", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "五個荘", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "蒲生", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "草津", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "野洲", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "篠原", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "近江八幡富田屋", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "近江八幡　南", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "水口", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "水口南・貴生川", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "甲賀・甲南", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "近江大野", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "鮎河", "pref": "中部圏", "district": "滋賀", "branch": "滋賀専売", "group": "", "tel": ""}, {"code": "", "name": "近江長岡", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "近江柏原", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "塩津", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "日野", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "竜王", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "山上", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "信楽", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "守山", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "草津西", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "湖南市　北", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "湖南市　南", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "大津", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "西大津", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "膳所", "pref": "中部圏", "district": "滋賀", "branch": "滋賀合売", "group": "", "tel": ""}, {"code": "", "name": "宝永明里", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "福井　花堂", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "福井　社", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "明新文京", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "福井　東郷", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "福井　開発", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "福井　志比口", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "福井　城東", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "清水", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "森田", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "酒生", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "三国", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "あわら", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "丸岡", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "丸岡　西", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "坂井", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "春江", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "金津　北", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "北潟", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "勝山", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "越前大野", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "松岡", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "永平寺", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "上志比", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "武生", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "武生　北部", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "鯖江東", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "神明", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "今立", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "織田", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "鯖江西・朝日町", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "宮崎", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "敦賀", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "敦賀　南部", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "美浜", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "三方", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "三方　南部", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "小浜", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "若狭高浜", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "おおい", "pref": "中部圏", "district": "福井", "branch": "福井専売", "group": "", "tel": ""}, {"code": "", "name": "砂子坂", "pref": "中部圏", "district": "福井", "branch": "福井合売", "group": "", "tel": ""}, {"code": "", "name": "浜越前", "pref": "中部圏", "district": "福井", "branch": "福井合売", "group": "", "tel": ""}, {"code": "", "name": "池田", "pref": "中部圏", "district": "福井", "branch": "福井合売", "group": "", "tel": ""}, {"code": "", "name": "今庄", "pref": "中部圏", "district": "福井", "branch": "福井合売", "group": "", "tel": ""}, {"code": "", "name": "今庄北", "pref": "中部圏", "district": "福井", "branch": "福井合売", "group": "", "tel": ""}, {"code": "", "name": "王子保", "pref": "中部圏", "district": "福井", "branch": "福井合売", "group": "", "tel": ""}, {"code": "", "name": "南条", "pref": "中部圏", "district": "福井", "branch": "福井合売", "group": "", "tel": ""}, {"code": "", "name": "美山", "pref": "中部圏", "district": "福井", "branch": "福井合売", "group": "", "tel": ""}, {"code": "", "name": "市波", "pref": "中部圏", "district": "福井", "branch": "福井合売", "group": "", "tel": ""}, {"code": "", "name": "若狭上中", "pref": "中部圏", "district": "福井", "branch": "福井合売", "group": "", "tel": ""}, {"code": "", "name": "岐阜　中野", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "岐阜　松山", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "岐阜　駅前", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "鏡島", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "本荘", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "岐阜　加納", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "岐阜　茜部", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "加納　西部", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "加納　六条", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "岐阜　県庁前", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "鶉", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "柳津", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "茜部　佐波", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "近の島", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "尻毛", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "岐商前", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "鷺山", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "岐阜ときわ", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "岐阜　則武", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "鵜飼　黒野", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "北方", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "北方　西郷", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "北方　西部", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "穂積", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "瑞穂　牛牧", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "藍川橋", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "長良　北部", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "長良　西部", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "長良　中央", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "高富", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "岐阜　美山", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "手力", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "長森", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "岩田坂", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "日野長森東", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "下芥見", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "大洞", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "笠松", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "岐南　東", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "岐南　徳田", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "羽島　東部", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "足近", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "羽島　中央", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "小熊", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "竹ケ鼻", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "羽島　南部", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "那加", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "(那加　中央)", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "尾崎団地", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "稲羽", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "蘇原", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "蘇原　北部", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "各務原", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "各務原　中央町", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "鵜沼　東", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "鵜沼団地", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜支部", "group": "", "tel": ""}, {"code": "", "name": "海津平田", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "大垣", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "大垣　駅西", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "大垣　東部", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "北垣", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "大垣　西部", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "赤坂", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "大垣　大迫", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "海津高須", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "石津", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "垂井", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "垂井　南部", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "大垣　池田", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "大野黒野", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "みの高田", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "養老", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "上石津", "pref": "岐阜県", "district": "岐阜", "branch": "西濃専売", "group": "", "tel": ""}, {"code": "", "name": "美濃太田", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "美濃加茂", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "川辺", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "坂祝", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "白川口", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "加茂野", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "八百津", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "美濃市", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "牧谷", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "関", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "関　西部", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "関　小瀬", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "関　東部", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "関　南部", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "郡上八幡", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "郡上大和", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "みの白鳥", "pref": "岐阜県", "district": "岐阜", "branch": "中濃専売", "group": "", "tel": ""}, {"code": "", "name": "ひだ金山", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨専売", "group": "", "tel": ""}, {"code": "", "name": "ひだ高山", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨専売", "group": "", "tel": ""}, {"code": "", "name": "高山　西部", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨専売", "group": "", "tel": ""}, {"code": "", "name": "高山　北部", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨専売", "group": "", "tel": ""}, {"code": "", "name": "神岡", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨専売", "group": "", "tel": ""}, {"code": "", "name": "広見", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "下切", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "今渡", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "西可児", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "春里", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "伏見　兼山", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "御嵩", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "多治見　西部", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "多治見　東部", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "多治見　両藤舎", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "多治見　池田", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "小泉", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "北栄", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "笠原", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "多治見　桜ケ丘", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "多治見　脇之島", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "姫", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "土岐津", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "土岐口", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "下石", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "妻木", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "駄知", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "瑞浪", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "瑞浪　西部", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "釜戸", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "明智", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "鶴岡", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "岩村", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "恵那　東部", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "恵那　佐伯", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "蛭川", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "落合", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "みの坂下", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "中津川　東", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "中津川　西", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "中津川　北", "pref": "岐阜県", "district": "岐阜", "branch": "東濃専売", "group": "", "tel": ""}, {"code": "", "name": "岐阜川島", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜合売", "group": "", "tel": ""}, {"code": "", "name": "山添", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜合売", "group": "", "tel": ""}, {"code": "", "name": "根尾", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜合売", "group": "", "tel": ""}, {"code": "", "name": "美江寺", "pref": "岐阜県", "district": "岐阜", "branch": "岐阜合売", "group": "", "tel": ""}, {"code": "", "name": "大垣　中川", "pref": "岐阜県", "district": "岐阜", "branch": "西濃合売", "group": "", "tel": ""}, {"code": "", "name": "駒野", "pref": "岐阜県", "district": "岐阜", "branch": "西濃合売", "group": "", "tel": ""}, {"code": "", "name": "関ヶ原", "pref": "岐阜県", "district": "岐阜", "branch": "西濃合売", "group": "", "tel": ""}, {"code": "", "name": "墨俣", "pref": "岐阜県", "district": "岐阜", "branch": "西濃合売", "group": "", "tel": ""}, {"code": "", "name": "輪之内", "pref": "岐阜県", "district": "岐阜", "branch": "西濃合売", "group": "", "tel": ""}, {"code": "", "name": "安八", "pref": "岐阜県", "district": "岐阜", "branch": "西濃合売", "group": "", "tel": ""}, {"code": "", "name": "広神戸", "pref": "岐阜県", "district": "岐阜", "branch": "西濃合売", "group": "", "tel": ""}, {"code": "", "name": "揖斐", "pref": "岐阜県", "district": "岐阜", "branch": "西濃合売", "group": "", "tel": ""}, {"code": "", "name": "武芸川", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "洞戸", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "富野", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "中之保", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "上之保", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "美並", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "相生", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "和良", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "正ヶ洞", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "古井", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "七宗", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "切井", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "黒川", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "神土", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "赤河", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "下油井", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "佐見", "pref": "岐阜県", "district": "岐阜", "branch": "中濃合売", "group": "", "tel": ""}, {"code": "", "name": "上宝", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "奥飛騨", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "打保", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "杉原", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "ひだ国府", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "古川", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "角川", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "坂上", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "茂住", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "高山朝日町", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "清見", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "久々野", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "ひだ一之宮", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "丹生川", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "東村", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "焼石", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "下呂", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "ひだ竹原", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "ひだ萩原", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "ひだ小坂", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "川西", "pref": "岐阜県", "district": "岐阜", "branch": "飛騨合売", "group": "", "tel": ""}, {"code": "", "name": "陶", "pref": "岐阜県", "district": "岐阜", "branch": "東濃合売", "group": "", "tel": ""}, {"code": "", "name": "遠山", "pref": "岐阜県", "district": "岐阜", "branch": "東濃合売", "group": "", "tel": ""}, {"code": "", "name": "恵那　上矢作", "pref": "岐阜県", "district": "岐阜", "branch": "東濃合売", "group": "", "tel": ""}, {"code": "", "name": "阿木", "pref": "岐阜県", "district": "岐阜", "branch": "東濃合売", "group": "", "tel": ""}, {"code": "", "name": "武並", "pref": "岐阜県", "district": "岐阜", "branch": "東濃合売", "group": "", "tel": ""}, {"code": "", "name": "坂本", "pref": "岐阜県", "district": "岐阜", "branch": "東濃合売", "group": "", "tel": ""}, {"code": "", "name": "苗木", "pref": "岐阜県", "district": "岐阜", "branch": "東濃合売", "group": "", "tel": ""}, {"code": "", "name": "福岡", "pref": "岐阜県", "district": "岐阜", "branch": "東濃合売", "group": "", "tel": ""}, {"code": "", "name": "田瀬下野", "pref": "岐阜県", "district": "岐阜", "branch": "東濃合売", "group": "", "tel": ""}, {"code": "", "name": "付知", "pref": "岐阜県", "district": "岐阜", "branch": "東濃合売", "group": "", "tel": ""}, {"code": "", "name": "加子母", "pref": "岐阜県", "district": "岐阜", "branch": "東濃合売", "group": "", "tel": ""}, {"code": "", "name": "浜松　中央", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　六間通", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　曳馬", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　中田", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　駅南", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　白脇", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　南陽", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　伊場", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　浅田", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　山手", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　さなる", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　大平台", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　北部", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　三方原", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　高丘", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　百里", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　湖東", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　舘山寺", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　大人見", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　雄踏", "pref": "静岡県", "district": "静岡", "branch": "市内専売", "group": "", "tel": ""}, {"code": "", "name": "新所原", "pref": "静岡県", "district": "静岡", "branch": "はまなこ専売", "group": "", "tel": ""}, {"code": "", "name": "鷲津", "pref": "静岡県", "district": "静岡", "branch": "はまなこ専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　湖南", "pref": "静岡県", "district": "静岡", "branch": "はまなこ専売", "group": "", "tel": ""}, {"code": "", "name": "細江", "pref": "静岡県", "district": "静岡", "branch": "はまなこ専売", "group": "", "tel": ""}, {"code": "", "name": "新居", "pref": "静岡県", "district": "静岡", "branch": "はまなこ専売", "group": "", "tel": ""}, {"code": "", "name": "三ケ日", "pref": "静岡県", "district": "静岡", "branch": "はまなこ専売", "group": "", "tel": ""}, {"code": "", "name": "都筑", "pref": "静岡県", "district": "静岡", "branch": "はまなこ専売", "group": "", "tel": ""}, {"code": "", "name": "浜松　テクノ", "pref": "静岡県", "district": "静岡", "branch": "はまなこ専売", "group": "", "tel": ""}, {"code": "", "name": "笠井", "pref": "静岡県", "district": "静岡", "branch": "西遠複合", "group": "", "tel": ""}, {"code": "", "name": "小松", "pref": "静岡県", "district": "静岡", "branch": "西遠複合", "group": "", "tel": ""}, {"code": "", "name": "貴布祢", "pref": "静岡県", "district": "静岡", "branch": "西遠複合", "group": "", "tel": ""}, {"code": "", "name": "二俣", "pref": "静岡県", "district": "静岡", "branch": "西中遠合売", "group": "", "tel": ""}, {"code": "", "name": "佐久間　南", "pref": "静岡県", "district": "静岡", "branch": "西中遠合売", "group": "", "tel": ""}, {"code": "", "name": "豊岡北遠", "pref": "静岡県", "district": "静岡", "branch": "西中遠合売", "group": "", "tel": ""}, {"code": "", "name": "高塚", "pref": "静岡県", "district": "静岡", "branch": "西中遠合売", "group": "", "tel": ""}, {"code": "", "name": "天竜川", "pref": "静岡県", "district": "静岡", "branch": "西中遠合売", "group": "", "tel": ""}, {"code": "", "name": "横須賀大東", "pref": "静岡県", "district": "静岡", "branch": "西中遠合売", "group": "", "tel": ""}, {"code": "", "name": "豊田町", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "竜洋", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "磐田　鈴木", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "磐田　南部", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "福田", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "袋井森下", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "袋井　南部", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "浅羽", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "袋井　北部", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "森町", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "掛川", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "掛川　駅南", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "菊川", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "小笠", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "御前崎", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "相良", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "島田", "pref": "静岡県", "district": "静岡", "branch": "中遠専売", "group": "", "tel": ""}, {"code": "", "name": "金谷", "pref": "静岡県", "district": "静岡", "branch": "東部合売", "group": "", "tel": ""}, {"code": "", "name": "家山", "pref": "静岡県", "district": "静岡", "branch": "東部合売", "group": "", "tel": ""}, {"code": "", "name": "下泉", "pref": "静岡県", "district": "静岡", "branch": "東部合売", "group": "", "tel": ""}, {"code": "", "name": "千頭", "pref": "静岡県", "district": "静岡", "branch": "東部合売", "group": "", "tel": ""}, {"code": "", "name": "藤枝", "pref": "静岡県", "district": "静岡", "branch": "東部合売", "group": "", "tel": ""}, {"code": "", "name": "焼津　薮崎", "pref": "静岡県", "district": "静岡", "branch": "東部合売", "group": "", "tel": ""}, {"code": "", "name": "榛原　内藤", "pref": "静岡県", "district": "静岡", "branch": "東部合売", "group": "", "tel": ""}, {"code": "", "name": "吉田", "pref": "静岡県", "district": "静岡", "branch": "東部合売", "group": "", "tel": ""}, {"code": "", "name": "静岡　江﨑", "pref": "静岡県", "district": "静岡", "branch": "東部合売", "group": "", "tel": ""}, {"code": "", "name": "清水　石原", "pref": "静岡県", "district": "静岡", "branch": "東部合売", "group": "", "tel": ""}, {"code": "", "name": "清水　中島", "pref": "静岡県", "district": "静岡", "branch": "東部合売", "group": "", "tel": ""}, {"code": "", "name": "清水　清水", "pref": "静岡県", "district": "静岡", "branch": "東部合売", "group": "", "tel": ""}, {"code": "", "name": "名古屋販売部", "pref": "愛知県", "district": "名古屋販売部", "branch": "＊", "group": "", "tel": ""}, {"code": "", "name": "尾張地区", "pref": "愛知県", "district": "愛知県販売部", "branch": "＊", "group": "", "tel": ""}, {"code": "", "name": "三河地区", "pref": "愛知県", "district": "愛知県販売部", "branch": "＊", "group": "", "tel": ""}, {"code": "", "name": "三重販売部", "pref": "三重県", "district": "三重販売部", "branch": "＊", "group": "", "tel": ""}, {"code": "", "name": "岐阜販売部", "pref": "岐阜県", "district": "岐阜販売部", "branch": "＊", "group": "", "tel": ""}, {"code": "", "name": "福井県", "pref": "中部圏", "district": "中部圏販売部", "branch": "＊", "group": "", "tel": ""}, {"code": "", "name": "長野県", "pref": "中部圏", "district": "中部圏販売部", "branch": "＊", "group": "", "tel": ""}, {"code": "", "name": "滋賀県", "pref": "中部圏", "district": "中部圏販売部", "branch": "＊", "group": "", "tel": ""}, {"code": "", "name": "東海販売部", "pref": "静岡県", "district": "東海販売部", "branch": "＊", "group": "", "tel": ""}];
+    const SHOPS = [{"code": "1001", "name": "中日新聞 名古屋栄専売店", "pref": "愛知県", "district": "名古屋", "branch": "中支部", "group": "1班", "tel": "052-200-0001"}, {"code": "1002", "name": "中日新聞 一宮専売店", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "2班", "tel": "0586-00-0002"}];
     let orders = JSON.parse(localStorage.getItem("edion_orders") || "[]");
+    let currentUser = null;
 
-    window.addEventListener("DOMContentLoaded", () => {
-        initShopFilters();
-        renderOrders();
-        renderMasterTable(SHOPS);
+    // ログイン処理
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const id = document.getElementById("loginId").value.trim();
+        const pw = document.getElementById("loginPassword").value.trim();
+        authenticate(id, pw);
     });
 
+    function quickLogin(id, pw) {
+        document.getElementById("loginId").value = id;
+        document.getElementById("loginPassword").value = pw;
+        authenticate(id, pw);
+    }
+
+    function authenticate(id, pw) {
+        // 1. 中日新聞社 管理者判定
+        if (id === "admin" && pw === "admin123") {
+            currentUser = { role: "admin", name: "中日新聞社 本部統括", code: "HEAD" };
+            applyRoleUI();
+            return;
+        }
+
+        // 2. 販売店判定（店舗コードが一致）
+        const shop = SHOPS.find(s => s.code === id);
+        if (shop && pw === "shop123") {
+            currentUser = { role: "store", shop: shop };
+            applyRoleUI();
+            return;
+        }
+
+        alert("IDまたはパスワードが正しくありません。\n\n【テスト用アカウント】\n管理者: admin / admin123\n専売店: 店舗コード / shop123");
+    }
+
+    function applyRoleUI() {
+        document.getElementById("loginView").style.display = "none";
+        document.getElementById("portalView").style.display = "block";
+
+        const badge = document.getElementById("currentRoleBadge");
+        const userDisp = document.getElementById("currentUserDisplay");
+        const adminElements = document.querySelectorAll(".admin-only");
+
+        if (currentUser.role === "admin") {
+            badge.textContent = "中日新聞社 本部管理者";
+            badge.className = "badge bg-warning text-dark ms-3";
+            userDisp.innerHTML = '<i class="bi bi-shield-check me-1"></i>管理者: ' + currentUser.name;
+            
+            // 管理者専用メニューを表示
+            adminElements.forEach(el => el.style.display = "");
+            document.getElementById("adminShopSelector").style.display = "block";
+            document.getElementById("storeShopFixed").style.display = "none";
+            initShopFilters();
+        } else {
+            badge.textContent = "専売店 画面";
+            badge.className = "badge bg-info text-white ms-3";
+            userDisp.innerHTML = '<i class="bi bi-shop me-1"></i>' + currentUser.shop.name;
+
+            // 管理者専用メニューを完全非表示
+            adminElements.forEach(el => el.style.display = "none");
+            document.getElementById("adminShopSelector").style.display = "none";
+            document.getElementById("storeShopFixed").style.display = "block";
+
+            // 自店舗情報を自動固定
+            document.getElementById("fixedShopName").textContent = currentUser.shop.name;
+            document.getElementById("fixedShopCode").textContent = currentUser.shop.code;
+            document.getElementById("fixedShopInfo").textContent = `地区: ${currentUser.shop.district} - ${currentUser.shop.branch} (${currentUser.shop.group}) / TEL: ${currentUser.shop.tel}`;
+            
+            // 受注タブを強制アクティブ化
+            const orderTab = new bootstrap.Tab(document.getElementById("order-tab"));
+            orderTab.show();
+        }
+
+        renderOrders();
+        renderMasterTable(SHOPS);
+    }
+
+    function logout() {
+        currentUser = null;
+        document.getElementById("loginForm").reset();
+        document.getElementById("portalView").style.display = "none";
+        document.getElementById("loginView").style.display = "block";
+    }
+
+    // 専売店絞り込みロジック (管理者用)
     function initShopFilters() {
         const prefs = [...new Set(SHOPS.map(s => s.pref).filter(Boolean))];
         const prefSelect = document.getElementById("filterPref");
+        prefSelect.innerHTML = '<option value="">県を選択</option>';
         prefs.forEach(p => {
             const opt = document.createElement("option");
             opt.value = p;
@@ -566,17 +695,9 @@
         });
     }
 
-    function onShopSelect() {
-        const code = document.getElementById("selectShop").value;
-        const shop = SHOPS.find(s => s.code === code);
-        const detailDiv = document.getElementById("selectedShopDetail");
-        if (shop) {
-            detailDiv.innerHTML = `<span class="badge bg-primary me-2">${shop.code}</span> <strong>${shop.name}</strong> / 地区: ${shop.district} - ${shop.branch} (${shop.group}) / TEL: ${shop.tel}`;
-        } else {
-            detailDiv.textContent = "※店舗を選択すると、FAX発注書の発信元情報に自動反映されます。";
-        }
-    }
+    function onShopSelect() {}
 
+    // 価格・粗利計算
     function calcPrices() {
         const wholesale = parseFloat(document.getElementById("wholesalePrice").value) || 0;
         const selling = parseFloat(document.getElementById("sellingPrice").value) || 0;
@@ -587,13 +708,20 @@
         display.className = profit >= 0 ? "form-control bg-white text-success fw-bold" : "form-control bg-white text-danger fw-bold";
     }
 
+    // 受注登録処理
     document.getElementById("orderForm").addEventListener("submit", (e) => {
         e.preventDefault();
-        const code = document.getElementById("selectShop").value;
-        const shop = SHOPS.find(s => s.code === code);
-        if (!shop) {
-            alert("専売店を選択してください。");
-            return;
+        
+        let targetShop = null;
+        if (currentUser.role === "store") {
+            targetShop = currentUser.shop;
+        } else {
+            const code = document.getElementById("selectShop").value;
+            targetShop = SHOPS.find(s => s.code === code);
+            if (!targetShop) {
+                alert("専売店を選択してください。");
+                return;
+            }
         }
 
         const wholesale = parseFloat(document.getElementById("wholesalePrice").value) || 0;
@@ -603,9 +731,9 @@
         const order = {
             id: "ED-" + Date.now().toString().slice(-6),
             date: new Date().toLocaleDateString("ja-JP"),
-            shopCode: shop.code,
-            shopName: shop.name,
-            shopTel: shop.tel,
+            shopCode: targetShop.code,
+            shopName: targetShop.name,
+            shopTel: targetShop.tel,
             custName: document.getElementById("custName").value,
             custTel: document.getElementById("custTel").value,
             custAddress: document.getElementById("custAddress").value,
@@ -630,6 +758,7 @@
         openPrintModal(order.id);
     });
 
+    // 一覧描画 (管理者用)
     function renderOrders() {
         const tbody = document.getElementById("ordersTableBody");
         document.getElementById("orderCountBadge").textContent = orders.length;
@@ -668,6 +797,7 @@
         document.getElementById("statTotalProfit").textContent = `¥${totalProfit.toLocaleString()}`;
     }
 
+    // FAXプレビュー
     function openPrintModal(orderId) {
         const o = orders.find(x => x.id === orderId);
         if (!o) return;
@@ -697,6 +827,7 @@
         document.getElementById("printArea").style.display = "none";
     }
 
+    // マスタ検索テーブル
     function renderMasterTable(list) {
         const tbody = document.getElementById("masterShopTableBody");
         tbody.innerHTML = list.slice(0, 100).map(s => `
@@ -726,6 +857,7 @@
         renderMasterTable(filtered);
     }
 
+    // CSVエクスポート
     function exportOrdersCSV() {
         if (orders.length === 0) {
             alert("出力する受注データがありません。");
