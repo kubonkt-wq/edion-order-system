@@ -6,6 +6,8 @@
     <title>中日新聞専売店 EDION家電発注・販売支援ポータル</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --edion-blue: #004098;
@@ -34,7 +36,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
-        /* FAX印刷レイアウト (A4 1枚用) */
+        /* FAX印刷レイアウト (A4) */
         @media print {
             body * {
                 visibility: hidden;
@@ -101,7 +103,8 @@
                 <i class="bi bi-shield-lock fs-1"></i>
             </div>
             <h4 class="fw-bold text-dark">家電受発注ポータル ログイン</h4>
-            <div class="text-muted small">中日新聞専売店 × EDION サポートチェーン提携</div>
+            <div class="text-muted small">中日新聞専売店 × EDION ESC提携</div>
+            <div class="mt-2"><span class="badge bg-success-subtle text-success border border-success">Supabase クラウド同期中</span></div>
         </div>
 
         <form id="loginForm">
@@ -124,17 +127,16 @@
             </button>
         </form>
 
-        <!-- 動作確認用クイックログインボタン -->
         <div class="bg-light p-3 rounded border mt-2">
             <div class="small fw-bold text-secondary mb-2"><i class="bi bi-lightning-charge me-1"></i>動作テスト用 クイック切替:</div>
             <div class="d-grid gap-2">
                 <button type="button" class="btn btn-outline-dark btn-sm text-start" onclick="quickLogin('admin', 'admin123')">
                     <strong>① 中日新聞社 本部管理者としてログイン</strong><br>
-                    <small class="text-muted">（全機能・全店舗マスタ・相殺集計を閲覧可能）</small>
+                    <small class="text-muted">（全店舗の発注データ・相殺集計・マスタを閲覧）</small>
                 </button>
                 <button type="button" class="btn btn-outline-primary btn-sm text-start" onclick="quickLogin('1001', 'shop123')">
                     <strong>② 専売店としてログイン: 中日新聞 名古屋栄専売店</strong><br>
-                    <small class="text-muted">（自店専用の新規受注・発注書作成画面のみ表示）</small>
+                    <small class="text-muted">（自店舗の発注登録・自店履歴のみ表示）</small>
                 </button>
             </div>
         </div>
@@ -168,10 +170,9 @@
                     <i class="bi bi-cart-plus me-1"></i>新規受注・発注書作成
                 </button>
             </li>
-            <!-- 管理者専用タブ群 -->
-            <li class="nav-item admin-only" role="presentation">
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane" type="button" role="tab">
-                    <i class="bi bi-card-list me-1"></i>受注一覧・発注管理 (<span id="orderCountBadge">0</span>)
+                    <i class="bi bi-card-list me-1"></i><span id="orderTabTitle">受注一覧・発注管理</span> (<span id="orderCountBadge">0</span>)
                 </button>
             </li>
             <li class="nav-item admin-only" role="presentation">
@@ -189,18 +190,17 @@
         <!-- タブコンテンツ -->
         <div class="tab-content" id="portalTabContent">
             
-            <!-- 1. 新規受注登録タブ（販売店・管理者の両方が利用可能） -->
+            <!-- 1. 新規受注登録タブ -->
             <div class="tab-pane fade show active" id="order-pane" role="tabpanel">
                 <div class="card card-custom p-4">
                     <h5 class="fw-bold text-primary mb-3 border-bottom pb-2">
                         <i class="bi bi-pencil-square me-2"></i>家電受注登録フォーム（持ち帰り見積・EDION FAX発注用）
                     </h5>
                     <form id="orderForm">
-                        <!-- 販売店情報の指定部 -->
                         <div class="bg-light p-3 rounded mb-3 border">
                             <h6 class="fw-bold text-secondary mb-2">① 発注専売店情報（中日新聞店）</h6>
                             
-                            <!-- 管理者用：1,163店から絞り込み検索 -->
+                            <!-- 管理者用：全店から選択 -->
                             <div id="adminShopSelector">
                                 <div class="row g-3">
                                     <div class="col-md-3">
@@ -223,14 +223,14 @@
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label small fw-bold">発注専売店（確定）</label>
-                                        <select class="form-select border-primary" id="selectShop" onchange="onShopSelect()">
+                                        <select class="form-select border-primary" id="selectShop">
                                             <option value="">専売店を選択してください</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- 販売店用：自店舗に完全固定 -->
+                            <!-- 販売店用：自店舗に固定 -->
                             <div id="storeShopFixed" style="display: none;">
                                 <div class="alert alert-info py-2 mb-0 d-flex align-items-center">
                                     <i class="bi bi-check-circle-fill fs-5 me-2 text-primary"></i>
@@ -338,21 +338,21 @@
                         </div>
 
                         <div class="text-end">
-                            <button type="submit" class="btn btn-primary btn-lg px-5">
-                                <i class="bi bi-check-circle me-1"></i>受注を登録して発注書を生成
+                            <button type="submit" class="btn btn-primary btn-lg px-5" id="submitBtn">
+                                <i class="bi bi-cloud-arrow-up me-1"></i>受注を登録してSupabaseに保存
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- 2. 受注一覧（中日新聞社 管理者専用） -->
-            <div class="tab-pane fade admin-only" id="list-pane" role="tabpanel">
+            <!-- 2. 受注一覧 -->
+            <div class="tab-pane fade" id="list-pane" role="tabpanel">
                 <div class="card card-custom p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold text-primary mb-0"><i class="bi bi-list-check me-2"></i>登録済 受注・発注書一覧（本部集約）</h5>
+                        <h5 class="fw-bold text-primary mb-0"><i class="bi bi-list-check me-2"></i><span id="listTableTitle">登録済 受注・発注書一覧</span></h5>
                         <button class="btn btn-outline-success btn-sm" onclick="exportOrdersCSV()">
-                            <i class="bi bi-file-earmark-excel me-1"></i>全店注文データをCSV出力
+                            <i class="bi bi-file-earmark-excel me-1"></i>CSVダウンロード
                         </button>
                     </div>
                     <div class="table-responsive">
@@ -365,7 +365,7 @@
                                     <th>商品名 / 型番</th>
                                     <th>卸価格(税抜)</th>
                                     <th>販売価格(税抜)</th>
-                                    <th>粗利(専売店利益)</th>
+                                    <th>粗利(利益)</th>
                                     <th>ステータス</th>
                                     <th class="text-center">操作</th>
                                 </tr>
@@ -376,7 +376,7 @@
                 </div>
             </div>
 
-            <!-- 3. 専売店マスタ（中日新聞社 管理者専用） -->
+            <!-- 3. 専売店マスタ（管理者専用） -->
             <div class="tab-pane fade admin-only" id="shops-pane" role="tabpanel">
                 <div class="card card-custom p-4">
                     <h5 class="fw-bold text-primary mb-3"><i class="bi bi-shop me-2"></i>専売店マスタ管理（2店舗）</h5>
@@ -404,11 +404,11 @@
                 </div>
             </div>
 
-            <!-- 4. 相殺集計（中日新聞社 管理者専用） -->
+            <!-- 4. 相殺集計（管理者専用） -->
             <div class="tab-pane fade admin-only" id="summary-pane" role="tabpanel">
                 <div class="card card-custom p-4">
                     <h5 class="fw-bold text-primary mb-3"><i class="bi bi-calculator me-2"></i>月次 新聞代相殺集計シミュレーション</h5>
-                    <p class="text-muted small">全専売店から上がった家電売上・卸金額を集計し、月次の新聞代請求データと相殺する管理プレビューです。</p>
+                    <p class="text-muted small">Supabase上に保存された全店データを集計し、月次の新聞代請求データと相殺する管理プレビューです。</p>
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <div class="p-3 bg-light border rounded">
@@ -418,7 +418,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="p-3 bg-light border rounded">
-                                <div class="small text-muted">EDION卸代金 合計（カード決済対象）</div>
+                                <div class="small text-muted">EDION卸代金 合計</div>
                                 <h3 class="fw-bold text-primary mb-0" id="statTotalWholesale">¥0</h3>
                             </div>
                         </div>
@@ -436,7 +436,7 @@
     </div>
 </div>
 
-<!-- ================= FAX印刷用プレビューエリア (A4レイアウト) ================= -->
+<!-- ================= FAX印刷用プレビューエリア (A4) ================= -->
 <div id="printArea" style="display: none;">
     <div class="fax-sheet">
         <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
@@ -541,8 +541,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Supabase 接続設定
+    const SUPABASE_URL = "https://jwxxhvnllphaoqjqiowv.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_VRyL977GEsKTCs_hDIdtaA_418xVuf1";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     const SHOPS = [{"code": "1001", "name": "中日新聞 名古屋栄専売店", "pref": "愛知県", "district": "名古屋", "branch": "中支部", "group": "1班", "tel": "052-200-0001"}, {"code": "1002", "name": "中日新聞 一宮専売店", "pref": "愛知県", "district": "尾張", "branch": "一宮支部", "group": "2班", "tel": "0586-00-0002"}];
-    let orders = JSON.parse(localStorage.getItem("edion_orders") || "[]");
+    let orders = [];
     let currentUser = null;
 
     // ログイン処理
@@ -560,14 +565,12 @@
     }
 
     function authenticate(id, pw) {
-        // 1. 中日新聞社 管理者判定
         if (id === "admin" && pw === "admin123") {
             currentUser = { role: "admin", name: "中日新聞社 本部統括", code: "HEAD" };
             applyRoleUI();
             return;
         }
 
-        // 2. 販売店判定（店舗コードが一致）
         const shop = SHOPS.find(s => s.code === id);
         if (shop && pw === "shop123") {
             currentUser = { role: "store", shop: shop };
@@ -575,10 +578,10 @@
             return;
         }
 
-        alert("IDまたはパスワードが正しくありません。\n\n【テスト用アカウント】\n管理者: admin / admin123\n専売店: 店舗コード / shop123");
+        alert("IDまたはパスワードが正しくありません。\n\n【テスト用】\n管理者: admin / admin123\n専売店: 店舗コード / shop123");
     }
 
-    function applyRoleUI() {
+    async function applyRoleUI() {
         document.getElementById("loginView").style.display = "none";
         document.getElementById("portalView").style.display = "block";
 
@@ -590,8 +593,9 @@
             badge.textContent = "中日新聞社 本部管理者";
             badge.className = "badge bg-warning text-dark ms-3";
             userDisp.innerHTML = '<i class="bi bi-shield-check me-1"></i>管理者: ' + currentUser.name;
-            
-            // 管理者専用メニューを表示
+            document.getElementById("orderTabTitle").textContent = "受注一覧・発注管理 (全店)";
+            document.getElementById("listTableTitle").textContent = "登録済 受注・発注書一覧（本部集約）";
+
             adminElements.forEach(el => el.style.display = "");
             document.getElementById("adminShopSelector").style.display = "block";
             document.getElementById("storeShopFixed").style.display = "none";
@@ -600,24 +604,23 @@
             badge.textContent = "専売店 画面";
             badge.className = "badge bg-info text-white ms-3";
             userDisp.innerHTML = '<i class="bi bi-shop me-1"></i>' + currentUser.shop.name;
+            document.getElementById("orderTabTitle").textContent = "自店舗 発注履歴";
+            document.getElementById("listTableTitle").textContent = "自店舗 発注一覧（履歴）";
 
-            // 管理者専用メニューを完全非表示
             adminElements.forEach(el => el.style.display = "none");
             document.getElementById("adminShopSelector").style.display = "none";
             document.getElementById("storeShopFixed").style.display = "block";
 
-            // 自店舗情報を自動固定
             document.getElementById("fixedShopName").textContent = currentUser.shop.name;
             document.getElementById("fixedShopCode").textContent = currentUser.shop.code;
             document.getElementById("fixedShopInfo").textContent = `地区: ${currentUser.shop.district} - ${currentUser.shop.branch} (${currentUser.shop.group}) / TEL: ${currentUser.shop.tel}`;
             
-            // 受注タブを強制アクティブ化
             const orderTab = new bootstrap.Tab(document.getElementById("order-tab"));
             orderTab.show();
         }
 
-        renderOrders();
         renderMasterTable(SHOPS);
+        await loadOrdersFromSupabase();
     }
 
     function logout() {
@@ -627,7 +630,174 @@
         document.getElementById("loginView").style.display = "block";
     }
 
-    // 専売店絞り込みロジック (管理者用)
+    // Supabaseから注文データを取得
+    async function loadOrdersFromSupabase() {
+        const tbody = document.getElementById("ordersTableBody");
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Supabaseから最新データを読込中...</td></tr>';
+
+        try {
+            let query = supabaseClient.from("orders").select("*").order("created_at", { ascending: false });
+            if (currentUser && currentUser.role === "store") {
+                query = query.eq("shop_code", currentUser.shop.code);
+            }
+
+            const { data, error } = await query;
+            if (error) throw error;
+            orders = data || [];
+            renderOrders();
+        } catch (err) {
+            console.error("Supabase読込エラー:", err);
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-danger">データの取得に失敗しました: ${err.message}</td></tr>`;
+        }
+    }
+
+    // 価格計算
+    function calcPrices() {
+        const wholesale = parseFloat(document.getElementById("wholesalePrice").value) || 0;
+        const selling = parseFloat(document.getElementById("sellingPrice").value) || 0;
+        const profit = selling - wholesale;
+        const margin = selling > 0 ? ((profit / selling) * 100).toFixed(1) : "0.0";
+        const display = document.getElementById("profitDisplay");
+        display.textContent = `¥${profit.toLocaleString()} (${margin}%)`;
+        display.className = profit >= 0 ? "form-control bg-white text-success fw-bold" : "form-control bg-white text-danger fw-bold";
+    }
+
+    // 受注登録処理 (SupabaseへInsert)
+    document.getElementById("orderForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const submitBtn = document.getElementById("submitBtn");
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Supabaseへ送信中...';
+
+        try {
+            let targetShop = null;
+            if (currentUser.role === "store") {
+                targetShop = currentUser.shop;
+            } else {
+                const code = document.getElementById("selectShop").value;
+                targetShop = SHOPS.find(s => s.code === code);
+                if (!targetShop) {
+                    alert("専売店を選択してください。");
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-cloud-arrow-up me-1"></i>受注を登録してSupabaseに保存';
+                    return;
+                }
+            }
+
+            const wholesale = parseFloat(document.getElementById("wholesalePrice").value) || 0;
+            const selling = parseFloat(document.getElementById("sellingPrice").value) || 0;
+            const qty = parseInt(document.getElementById("prodQty").value) || 1;
+
+            const orderPayload = {
+                order_no: "ED-" + Date.now().toString().slice(-6),
+                shop_code: targetShop.code,
+                shop_name: targetShop.name,
+                shop_tel: targetShop.tel,
+                cust_name: document.getElementById("custName").value,
+                cust_tel: document.getElementById("custTel").value,
+                cust_address: document.getElementById("custAddress").value,
+                delivery_date: document.getElementById("deliveryDate").value || "指定なし",
+                prod_name: document.getElementById("prodName").value,
+                prod_model: document.getElementById("prodModel").value,
+                qty: qty,
+                wholesale_price: wholesale,
+                selling_price: selling,
+                profit: (selling - wholesale) * qty,
+                floor_info: document.getElementById("floorInfo").value || "戸建/EV指定なし",
+                elevator_info: document.getElementById("elevatorInfo").value,
+                recycle_info: document.getElementById("recycleSelect").value,
+                status: "未送信(FAX待ち)"
+            };
+
+            const { data, error } = await supabaseClient.from("orders").insert([orderPayload]).select();
+            if (error) throw error;
+
+            alert("【保存成功】Supabaseクラウドデータベースに注文を記録しました！FAX発注書を表示します。");
+            document.getElementById("orderForm").reset();
+            calcPrices();
+            await loadOrdersFromSupabase();
+            openPrintModal(orderPayload.order_no);
+        } catch (err) {
+            console.error("保存失敗:", err);
+            alert("Supabaseへの保存でエラーが発生しました:\n" + err.message);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-cloud-arrow-up me-1"></i>受注を登録してSupabaseに保存';
+        }
+    });
+
+    // 一覧描画
+    function renderOrders() {
+        const tbody = document.getElementById("ordersTableBody");
+        document.getElementById("orderCountBadge").textContent = orders.length;
+
+        let totalWholesale = 0;
+        let totalProfit = 0;
+
+        if (orders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">登録された受注データはありません。</td></tr>';
+        } else {
+            tbody.innerHTML = orders.map(o => {
+                totalWholesale += (o.wholesale_price || 0) * (o.qty || 1);
+                totalProfit += (o.profit || 0);
+                const orderDate = o.created_at ? new Date(o.created_at).toLocaleDateString("ja-JP") : "-";
+                return `
+                    <tr>
+                        <td><strong>${o.order_no}</strong><br><small class="text-muted">${orderDate}</small></td>
+                        <td>${o.shop_name}<br><small class="text-muted">${o.shop_code}</small></td>
+                        <td><strong>${o.cust_name}</strong></td>
+                        <td>${o.prod_name}<br><small class="text-muted">${o.prod_model || ""} (×${o.qty})</small></td>
+                        <td>¥${((o.wholesale_price || 0) * (o.qty || 1)).toLocaleString()}</td>
+                        <td>¥${((o.selling_price || 0) * (o.qty || 1)).toLocaleString()}</td>
+                        <td class="text-success fw-bold">¥${(o.profit || 0).toLocaleString()}</td>
+                        <td><span class="badge bg-warning text-dark">${o.status}</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-primary" onclick="openPrintModal('${o.order_no}')">
+                                <i class="bi bi-printer me-1"></i>FAX発注書
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        document.getElementById("statTotalCount").textContent = `${orders.length} 件`;
+        document.getElementById("statTotalWholesale").textContent = `¥${totalWholesale.toLocaleString()}`;
+        document.getElementById("statTotalProfit").textContent = `¥${totalProfit.toLocaleString()}`;
+    }
+
+    // FAXプレビュー表示
+    function openPrintModal(orderNo) {
+        const o = orders.find(x => x.order_no === orderNo);
+        if (!o) return;
+
+        const orderDate = o.created_at ? new Date(o.created_at).toLocaleDateString("ja-JP") : new Date().toLocaleDateString("ja-JP");
+        document.getElementById("faxOrderNo").textContent = o.order_no;
+        document.getElementById("faxPrintDate").textContent = orderDate;
+        document.getElementById("faxShopName").textContent = o.shop_name;
+        document.getElementById("faxShopCode").textContent = o.shop_code;
+        document.getElementById("faxShopTel").textContent = o.shop_tel || "--";
+        document.getElementById("faxCustName").textContent = o.cust_name;
+        document.getElementById("faxCustTel").textContent = o.cust_tel;
+        document.getElementById("faxCustAddress").textContent = o.cust_address;
+        document.getElementById("faxDeliveryDate").textContent = o.delivery_date || "指定なし";
+        document.getElementById("faxFloorInfo").textContent = `${o.floor_info || ""} (エレベーター: ${o.elevator_info || "--"})`;
+        document.getElementById("faxProdName").textContent = o.prod_name;
+        document.getElementById("faxProdModel").textContent = o.prod_model || "--";
+        document.getElementById("faxProdQty").textContent = o.qty;
+        document.getElementById("faxWholesalePrice").textContent = `¥${(o.wholesale_price || 0).toLocaleString()}`;
+        document.getElementById("faxTotalPrice").textContent = `¥${((o.wholesale_price || 0) * (o.qty || 1)).toLocaleString()}`;
+        document.getElementById("faxRecycleInfo").textContent = o.recycle_info || "なし";
+
+        document.getElementById("printArea").style.display = "block";
+        window.scrollTo(0, document.getElementById("printArea").offsetTop);
+    }
+
+    function closePrint() {
+        document.getElementById("printArea").style.display = "none";
+    }
+
+    // 店舗選択ロジック (管理者用)
     function initShopFilters() {
         const prefs = [...new Set(SHOPS.map(s => s.pref).filter(Boolean))];
         const prefSelect = document.getElementById("filterPref");
@@ -695,138 +865,6 @@
         });
     }
 
-    function onShopSelect() {}
-
-    // 価格・粗利計算
-    function calcPrices() {
-        const wholesale = parseFloat(document.getElementById("wholesalePrice").value) || 0;
-        const selling = parseFloat(document.getElementById("sellingPrice").value) || 0;
-        const profit = selling - wholesale;
-        const margin = selling > 0 ? ((profit / selling) * 100).toFixed(1) : "0.0";
-        const display = document.getElementById("profitDisplay");
-        display.textContent = `¥${profit.toLocaleString()} (${margin}%)`;
-        display.className = profit >= 0 ? "form-control bg-white text-success fw-bold" : "form-control bg-white text-danger fw-bold";
-    }
-
-    // 受注登録処理
-    document.getElementById("orderForm").addEventListener("submit", (e) => {
-        e.preventDefault();
-        
-        let targetShop = null;
-        if (currentUser.role === "store") {
-            targetShop = currentUser.shop;
-        } else {
-            const code = document.getElementById("selectShop").value;
-            targetShop = SHOPS.find(s => s.code === code);
-            if (!targetShop) {
-                alert("専売店を選択してください。");
-                return;
-            }
-        }
-
-        const wholesale = parseFloat(document.getElementById("wholesalePrice").value) || 0;
-        const selling = parseFloat(document.getElementById("sellingPrice").value) || 0;
-        const qty = parseInt(document.getElementById("prodQty").value) || 1;
-
-        const order = {
-            id: "ED-" + Date.now().toString().slice(-6),
-            date: new Date().toLocaleDateString("ja-JP"),
-            shopCode: targetShop.code,
-            shopName: targetShop.name,
-            shopTel: targetShop.tel,
-            custName: document.getElementById("custName").value,
-            custTel: document.getElementById("custTel").value,
-            custAddress: document.getElementById("custAddress").value,
-            deliveryDate: document.getElementById("deliveryDate").value || "指定なし",
-            prodName: document.getElementById("prodName").value,
-            prodModel: document.getElementById("prodModel").value,
-            qty: qty,
-            wholesalePrice: wholesale,
-            sellingPrice: selling,
-            profit: (selling - wholesale) * qty,
-            floorInfo: document.getElementById("floorInfo").value || "戸建/EV指定なし",
-            elevatorInfo: document.getElementById("elevatorInfo").value,
-            recycleInfo: document.getElementById("recycleSelect").value,
-            status: "未送信(FAX待ち)"
-        };
-
-        orders.unshift(order);
-        localStorage.setItem("edion_orders", JSON.stringify(orders));
-        
-        alert("受注を登録しました！FAX発注書を作成します。");
-        renderOrders();
-        openPrintModal(order.id);
-    });
-
-    // 一覧描画 (管理者用)
-    function renderOrders() {
-        const tbody = document.getElementById("ordersTableBody");
-        document.getElementById("orderCountBadge").textContent = orders.length;
-
-        let totalWholesale = 0;
-        let totalProfit = 0;
-
-        if (orders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">登録された受注データはまだありません。</td></tr>';
-        } else {
-            tbody.innerHTML = orders.map(o => {
-                totalWholesale += o.wholesalePrice * o.qty;
-                totalProfit += o.profit;
-                return `
-                    <tr>
-                        <td><strong>${o.id}</strong><br><small class="text-muted">${o.date}</small></td>
-                        <td>${o.shopName}<br><small class="text-muted">${o.shopCode}</small></td>
-                        <td><strong>${o.custName}</strong></td>
-                        <td>${o.prodName}<br><small class="text-muted">${o.prodModel} (×${o.qty})</small></td>
-                        <td>¥${(o.wholesalePrice * o.qty).toLocaleString()}</td>
-                        <td>¥${(o.sellingPrice * o.qty).toLocaleString()}</td>
-                        <td class="text-success fw-bold">¥${o.profit.toLocaleString()}</td>
-                        <td><span class="badge bg-warning text-dark">${o.status}</span></td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-primary" onclick="openPrintModal('${o.id}')">
-                                <i class="bi bi-printer me-1"></i>FAX発注書
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join("");
-        }
-
-        document.getElementById("statTotalCount").textContent = `${orders.length} 件`;
-        document.getElementById("statTotalWholesale").textContent = `¥${totalWholesale.toLocaleString()}`;
-        document.getElementById("statTotalProfit").textContent = `¥${totalProfit.toLocaleString()}`;
-    }
-
-    // FAXプレビュー
-    function openPrintModal(orderId) {
-        const o = orders.find(x => x.id === orderId);
-        if (!o) return;
-
-        document.getElementById("faxOrderNo").textContent = o.id;
-        document.getElementById("faxPrintDate").textContent = o.date;
-        document.getElementById("faxShopName").textContent = o.shopName;
-        document.getElementById("faxShopCode").textContent = o.shopCode;
-        document.getElementById("faxShopTel").textContent = o.shopTel;
-        document.getElementById("faxCustName").textContent = o.custName;
-        document.getElementById("faxCustTel").textContent = o.custTel;
-        document.getElementById("faxCustAddress").textContent = o.custAddress;
-        document.getElementById("faxDeliveryDate").textContent = o.deliveryDate;
-        document.getElementById("faxFloorInfo").textContent = `${o.floorInfo} (エレベーター: ${o.elevatorInfo})`;
-        document.getElementById("faxProdName").textContent = o.prodName;
-        document.getElementById("faxProdModel").textContent = o.prodModel;
-        document.getElementById("faxProdQty").textContent = o.qty;
-        document.getElementById("faxWholesalePrice").textContent = `¥${o.wholesalePrice.toLocaleString()}`;
-        document.getElementById("faxTotalPrice").textContent = `¥${(o.wholesalePrice * o.qty).toLocaleString()}`;
-        document.getElementById("faxRecycleInfo").textContent = o.recycleInfo;
-
-        document.getElementById("printArea").style.display = "block";
-        window.scrollTo(0, document.getElementById("printArea").offsetTop);
-    }
-
-    function closePrint() {
-        document.getElementById("printArea").style.display = "none";
-    }
-
     // マスタ検索テーブル
     function renderMasterTable(list) {
         const tbody = document.getElementById("masterShopTableBody");
@@ -863,16 +901,16 @@
             alert("出力する受注データがありません。");
             return;
         }
-        const headers = ["発注No", "日付", "店舗コード", "専売店名", "顧客名", "顧客電話", "商品名", "型番", "数量", "卸単価", "売価単価", "粗利", "搬入環境", "リサイクル", "ステータス"];
+        const headers = ["発注No", "登録日", "店舗コード", "専売店名", "顧客名", "電話番号", "住所", "商品名", "型番", "数量", "卸価格", "売価", "粗利", "ステータス"];
         const rows = orders.map(o => [
-            o.id, o.date, o.shopCode, `"${o.shopName}"`, `"${o.custName}"`, o.custTel, `"${o.prodName}"`, o.prodModel, o.qty, o.wholesalePrice, o.sellingPrice, o.profit, `"${o.floorInfo}"`, `"${o.recycleInfo}"`, o.status
+            o.order_no, o.created_at ? o.created_at.slice(0,10) : "", o.shop_code, `"${o.shop_name}"`, `"${o.cust_name}"`, o.cust_tel, `"${o.cust_address}"`, `"${o.prod_name}"`, o.prod_model || "", o.qty, o.wholesale_price, o.selling_price, o.profit, o.status
         ]);
         const csvContent = "﻿" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `edion_orders_${new Date().toISOString().slice(0,10)}.csv`;
+        a.download = `orders_${new Date().toISOString().slice(0,10)}.csv`;
         a.click();
     }
 </script>
