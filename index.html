@@ -6,6 +6,7 @@
     <title>中日新聞専売店 EDION家電発注ポータル</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <style>
@@ -58,13 +59,19 @@
 
     <div class="container my-4">
         <ul class="nav nav-tabs mb-4" id="portalTab" role="tablist">
-            <li class="nav-item"><button class="nav-link active" id="order-tab" data-bs-toggle="tab" data-bs-target="#order-pane">新規入力・登録</button></li>
-            <li class="nav-item"><button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane">登録履歴・発注書出力</button></li>
-            <li class="nav-item admin-only"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#master-pane">専売店マスタ (1,163店)</button></li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="order-tab" data-bs-toggle="tab" data-bs-target="#order-pane" type="button" role="tab">新規入力・登録</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane" type="button" role="tab">登録履歴・発注書出力</button>
+            </li>
+            <li class="nav-item admin-only" role="presentation">
+                <button class="nav-link" id="master-tab" data-bs-toggle="tab" data-bs-target="#master-pane" type="button" role="tab">専売店マスタ (1,163店)</button>
+            </li>
         </ul>
 
         <div class="tab-content">
-            <div class="tab-pane fade show active" id="order-pane">
+            <div class="tab-pane fade show active" id="order-pane" role="tabpanel">
                 <div class="card card-custom p-4">
                     <h5 class="fw-bold text-primary mb-3 border-bottom pb-2">家電発注登録フォーム</h5>
                     <form id="orderForm">
@@ -86,7 +93,6 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold">取扱専売店（選択）</label>
-                                    <!-- required を削除し、非表示時のブロックを解除 -->
                                     <select class="form-select form-select-sm border-primary" id="selectShop">
                                         <option value="">専売店を選択してください</option>
                                     </select>
@@ -173,7 +179,7 @@
                 </div>
             </div>
 
-            <div class="tab-pane fade" id="list-pane">
+            <div class="tab-pane fade" id="list-pane" role="tabpanel">
                 <div class="card card-custom p-4">
                     <h5 class="fw-bold text-primary mb-3">登録済 受注・発注履歴</h5>
                     <div class="table-responsive">
@@ -189,7 +195,7 @@
                 </div>
             </div>
 
-            <div class="tab-pane fade admin-only" id="master-pane">
+            <div class="tab-pane fade admin-only" id="master-pane" role="tabpanel">
                 <div class="card card-custom p-4">
                     <h5 class="fw-bold text-primary mb-3">登録済 専売店マスタ一覧 (全 1,163 店舗)</h5>
                     <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
@@ -404,16 +410,25 @@
             if (error) {
                 console.error("Supabaseエラー:", error);
                 alert("データベース保存エラー:\n" + error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-cloud-arrow-up me-1"></i>登録して保存';
                 return;
             }
 
-            alert("【保存成功】受注データを登録しました！一覧画面へ切り替えます。");
+            alert("【保存成功】受注データを登録しました！一覧画面へ移動します。");
             document.getElementById("orderForm").reset();
-            await loadOrdersFromSupabase();
-            const listTabEl = document.getElementById("list-tab");
-            if (listTabEl) {
-                const tab = new bootstrap.Tab(listTabEl);
-                tab.show();
+
+            // 一覧の再読み込み
+            try {
+                await loadOrdersFromSupabase();
+            } catch (loadErr) {
+                console.warn("一覧取得警告:", loadErr);
+            }
+
+            // タブを確実に一覧へ切り替え
+            const listTabBtn = document.getElementById("list-tab");
+            if (listTabBtn) {
+                listTabBtn.click();
             }
         } catch (err) {
             console.error("保存失敗:", err);
