@@ -58,8 +58,8 @@
 
     <div class="container my-4">
         <ul class="nav nav-tabs mb-4" id="portalTab" role="tablist">
-            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#order-pane">新規入力・登録</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#list-pane">登録履歴・発注書出力</button></li>
+            <li class="nav-item"><button class="nav-link active" id="order-tab" data-bs-toggle="tab" data-bs-target="#order-pane">新規入力・登録</button></li>
+            <li class="nav-item"><button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane">登録履歴・発注書出力</button></li>
             <li class="nav-item admin-only"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#master-pane">専売店マスタ (1,163店)</button></li>
         </ul>
 
@@ -86,7 +86,8 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold">取扱専売店（選択）</label>
-                                    <select class="form-select form-select-sm border-primary" id="selectShop" required>
+                                    <!-- required を削除し、非表示時のブロックを解除 -->
+                                    <select class="form-select form-select-sm border-primary" id="selectShop">
                                         <option value="">専売店を選択してください</option>
                                     </select>
                                 </div>
@@ -164,7 +165,9 @@
                         </div>
 
                         <div class="text-end">
-                            <button type="submit" class="btn btn-primary px-5" id="submitBtn">登録して保存</button>
+                            <button type="submit" class="btn btn-primary px-5 py-2 fw-bold" id="submitBtn">
+                                <i class="bi bi-cloud-arrow-up me-1"></i>登録して保存
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -345,13 +348,23 @@
 
     document.getElementById("orderForm").addEventListener("submit", async (e) => {
         e.preventDefault();
-        document.getElementById("submitBtn").disabled = true;
+        const submitBtn = document.getElementById("submitBtn");
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>保存中...';
 
         try {
-            let targetShop = currentUser.role === "store" ? currentUser.shop : SHOPS.find(s => String(s.code) === String(document.getElementById("selectShop").value));
+            let targetShop = null;
+            if (currentUser.role === "store") {
+                targetShop = currentUser.shop;
+            } else {
+                const selectedCode = document.getElementById("selectShop").value;
+                targetShop = SHOPS.find(s => String(s.code) === String(selectedCode));
+            }
+
             if (!targetShop) {
-                alert("取扱専売店を選択してください。");
-                document.getElementById("submitBtn").disabled = false;
+                alert("取扱専売店が特定できませんでした。専売店を選択してください。");
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-cloud-arrow-up me-1"></i>登録して保存';
                 return;
             }
 
@@ -360,7 +373,8 @@
             
             const payload = {
                 order_no: "ED-" + Date.now().toString().slice(-6),
-                shop_code: targetShop.code, shop_name: targetShop.name,
+                shop_code: targetShop.code,
+                shop_name: targetShop.name,
                 cust_kana: document.getElementById("custKana").value,
                 cust_name: document.getElementById("custName").value,
                 cust_tel: document.getElementById("custTel").value,
@@ -369,9 +383,9 @@
                 cust_address: document.getElementById("custAddress").value,
                 delivery_type: document.getElementById("deliveryType").value,
                 stair_floor: document.getElementById("stairFloor").value,
-                delivery_date_1: document.getElementById("deliveryDate1").value,
+                delivery_date_1: document.getElementById("deliveryDate1").value || null,
                 delivery_time_1: document.getElementById("deliveryTime1").value,
-                delivery_date_2: document.getElementById("deliveryDate2").value,
+                delivery_date_2: document.getElementById("deliveryDate2").value || null,
                 delivery_time_2: document.getElementById("deliveryTime2").value,
                 maker_name: document.getElementById("makerName").value,
                 prod_name: document.getElementById("prodName").value,
@@ -386,22 +400,34 @@
                 memo: document.getElementById("orderMemo").value
             };
 
-            await supabaseClient.from("orders").insert([payload]);
-            alert("【保存成功】Supabaseに登録しました。一覧から公式Excelを出力できます。");
+            const { data, error } = await supabaseClient.from("orders").insert([payload]).select();
+            if (error) {
+                console.error("Supabaseエラー:", error);
+                alert("データベース保存エラー:\n" + error.message);
+                return;
+            }
+
+            alert("【保存成功】受注データを登録しました！一覧画面へ切り替えます。");
             document.getElementById("orderForm").reset();
             await loadOrdersFromSupabase();
-            new bootstrap.Tab(document.getElementById("list-tab")).show();
+            const listTabEl = document.getElementById("list-tab");
+            if (listTabEl) {
+                const tab = new bootstrap.Tab(listTabEl);
+                tab.show();
+            }
         } catch (err) {
-            alert("エラー: " + err.message);
+            console.error("保存失敗:", err);
+            alert("エラーが発生しました: " + err.message);
         } finally {
-            document.getElementById("submitBtn").disabled = false;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-cloud-arrow-up me-1"></i>登録して保存';
         }
     });
 
     function renderOrders() {
         const tbody = document.getElementById("ordersTableBody");
         if (orders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">データなし</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">登録された受注データはありません。</td></tr>';
             return;
         }
         tbody.innerHTML = orders.map(o => {
